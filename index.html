@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Horizon Mobile - Digital ID</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, RecaptchaVerifier, linkWithPhoneNumber, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+
+        // Configurazione Firebase Horizon ID Core
+        const horizonIdConfig = {
+            apiKey: "AIzaSyD8_itwMJwjLSftJaFJ6ztQN-B6WSBORoo",
+            authDomain: "horizon-id-core.firebaseapp.com",
+            databaseURL: "https://horizon-id-core-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "horizon-id-core",
+            storageBucket: "horizon-id-core.firebasestorage.app",
+            messagingSenderId: "366693750800",
+            appId: "1:366693750800:web:20b54d0d2180d30fa7d295",
+            measurementId: "G-7GM9H4WBHP"
+        };
+        
+        const app = initializeApp(horizonIdConfig);
+        window.auth = getAuth(app);
+        window.db = getDatabase(app); 
+
+        window.firebaseAPI = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, RecaptchaVerifier, linkWithPhoneNumber, sendEmailVerification, ref, set, get, onValue, update, push };
+    </script>
+
+    <style>
+        :root {
+            --primary: #0B1120; --primary-light: #1E293B; --accent: #2563EB; --accent-light: #3B82F6;
+            --success: #10B981; --warning: #F59E0B; --danger: #EF4444;
+            --bg: #F8FAFC; --card: #FFFFFF; --text: #0F172A; --text-light: #64748B;
+            --border: #E2E8F0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        .view { display: none; flex: 1; overflow-y: auto; padding: 20px; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: calc(100px + env(safe-area-inset-bottom)); animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .view.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .header-mobile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header-mobile h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        .header-mobile .user-avatar { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226, 232, 240, 0.6); display: flex; justify-content: space-around; padding: 12px 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 1000; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-light); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .nav-item i { font-size: 24px; transition: transform 0.2s; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item.active i { font-weight: bold; transform: scale(1.1); }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 8px 20px -4px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid rgba(226, 232, 240, 0.8); }
+        .card-title { font-size: 14px; color: var(--text-light); font-weight: 700; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; }
+
+        .input { width: 100%; padding: 16px; margin-bottom: 15px; border: 1.5px solid var(--border); border-radius: 14px; font-size: 15px; background: #F8FAFC; outline: none; transition: all 0.3s; font-weight: 500; }
+        .input:focus { border-color: var(--accent); background: #FFF; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        select.input { appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%2364748B"><path d="M4 6l4 4 4-4"/></svg>'); background-repeat: no-repeat; background-position: right 15px center; }
+        
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.1s; letter-spacing: 0.3px; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .btn-outline { background: transparent; color: var(--text); border: 2px solid var(--border); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-success { background: var(--success); color: white; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; color: white; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 9999; align-items: flex-end; justify-content: center; }
+        .modal.active { display: flex; animation: fadeInModal 0.3s; }
+        .modal-content { background: var(--card); width: 100%; border-radius: 24px 24px 0 0; padding: 30px 20px; padding-bottom: calc(30px + env(safe-area-inset-bottom)); animation: slideUpModal 0.3s; }
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .otp-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 15px; background: linear-gradient(135deg, #0B1120, #1E293B); border-radius: 24px; color: white; box-shadow: 0 15px 30px -5px rgba(11, 17, 32, 0.4); position: relative; overflow: hidden; margin-bottom: 25px; }
+        .otp-container::after { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
+        .otp-circle { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; }
+        .otp-svg { transform: rotate(-90deg); width: 180px; height: 180px; }
+        .otp-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
+        .otp-progress { fill: none; stroke: var(--accent-light); stroke-width: 8; stroke-dasharray: 502; stroke-dashoffset: 0; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+        .otp-content { position: absolute; text-align: center; }
+        .otp-value { font-size: 38px; font-weight: 800; letter-spacing: 4px; font-family: monospace; text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-bottom: 2px; }
+        .otp-label { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+
+        .list-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
+        .list-item:last-child { border-bottom: none; }
+        .list-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+
+        .auth-container { display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 30px; background: var(--card); }
+        .auth-logo { text-align: center; margin-bottom: 40px; }
+        .auth-logo i { font-size: 70px; color: var(--accent); background: linear-gradient(135deg, var(--accent), var(--accent-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .digital-id { background: white; border: 2px solid var(--accent); border-radius: 20px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15); }
+        .digital-id.locked { border-color: var(--danger); filter: grayscale(100%); opacity: 0.8; box-shadow: none; }
+        .digital-id .barcode { height: 40px; background: repeating-linear-gradient(90deg, #0f172a, #0f172a 2px, transparent 2px, transparent 4px, #0f172a 4px, #0f172a 5px, transparent 5px, transparent 8px); width: 100%; margin-top: 15px; border-radius: 4px; opacity: 0.8; }
+
+        .video-container { position: relative; width: 100%; height: 350px; background: #000; border-radius: 16px; overflow: hidden; margin-bottom: 15px; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .recording-indicator { position: absolute; top: 15px; right: 15px; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 12px; border-radius: 10px; font-size: 13px; font-weight: 800; display: none; align-items: center; gap: 6px; animation: pulse 1s infinite; backdrop-filter: blur(5px); }
+
+        .upload-box { border: 2px dashed var(--accent-light); border-radius: 16px; padding: 30px 20px; text-align: center; background: rgba(59, 130, 246, 0.05); cursor: pointer; margin-bottom: 15px; position: relative; overflow: hidden; transition: background 0.3s; }
+        .upload-box i { font-size: 36px; color: var(--accent); margin-bottom: 10px; }
+        .upload-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+        
+        .loader-overlay { position: fixed; inset: 0; background: rgba(248,250,252,0.95); backdrop-filter: blur(10px); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; color: var(--primary); }
+        .spinner { border: 4px solid var(--border); border-top: 4px solid var(--accent); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .service-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="global-loader">
+        <div class="spinner"></div>
+        <span id="loader-text" style="font-size: 16px;">Operazione in corso...</span>
+    </div>
+
+    <div id="recaptcha-container"></div>
+
+    <div id="view-auth" class="view" style="padding: 0; padding-bottom:0;">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <i class="ph-fill ph-fingerprint"></i>
+                <h1 style="font-size: 28px; color: var(--primary); margin-top: 15px; font-weight: 800;">Horizon ID</h1>
+                <p style="color:var(--text-light); font-size:15px; margin-top:5px;">L'Ecosistema Globale Horizon</p>
+            </div>
+            
+            <div id="login-form">
+                <input type="email" id="auth-email" class="input" placeholder="Email Horizon ID">
+                <input type="password" id="auth-pass" class="input" placeholder="Password Sicura">
+                <button class="btn btn-primary" onclick="login()">Accedi all'App</button>
+                <div style="display:flex; justify-content:space-between; margin-top:25px; font-size:13px;">
+                    <a href="#" onclick="toggleAuthMode('register')" style="color:var(--accent); font-weight:bold; text-decoration:none;">Crea ID</a>
+                    <a href="#" onclick="toggleAuthMode('phoneChange')" style="color:var(--text-light); text-decoration:none;">Hai cambiato numero?</a>
+                </div>
+            </div>
+
+            <div id="register-form" style="display:none;">
+                <select id="reg-tipo" class="input">
+                    <option value="Cittadino">Privato / Cittadino</option>
+                    <option value="Azienda">Azienda / Professionista</option>
+                </select>
+                <input type="text" id="reg-nome" class="input" placeholder="Nome Completo / Ragione Sociale">
+                <input type="text" id="reg-cf" class="input" placeholder="Codice Fiscale o P.IVA">
+                <input type="email" id="reg-email" class="input" placeholder="Email istituzionale">
+                <input type="password" id="reg-pass" class="input" placeholder="Crea Password (min. 6 car.)">
+                <input type="tel" id="reg-cell" class="input" placeholder="Cellulare (es. +39333...)">
+                <button class="btn btn-primary" onclick="initRegistration()">Procedi alla Verifica</button>
+                <p style="text-align:center; margin-top:25px; font-size:14px; color:var(--text-light);">Hai già un account? <a href="#" onclick="toggleAuthMode('login')" style="color:var(--accent); font-weight:bold; text-decoration:none;">Accedi</a></p>
+            </div>
+
+            <div id="sms-verify-form" style="display:none; text-align:center;">
+                <i class="ph-fill ph-chat-teardrop-text" style="font-size:50px; color:var(--success); margin-bottom:15px;"></i>
+                <h2 style="margin-bottom:10px;">Verifica Cellulare</h2>
+                <p style="font-size:14px; color:var(--text-light); margin-bottom:10px;">Abbiamo inviato un SMS al tuo numero. Controlla anche l'Email per la verifica.</p>
+                <input type="number" id="reg-sms-code" class="input" placeholder="Inserisci OTP a 6 cifre" style="text-align:center; font-size:24px; letter-spacing:5px;">
+                <button class="btn btn-success" onclick="confirmRegistration()">Conferma e Continua</button>
+            </div>
+
+            <div id="change-phone-form" style="display:none;">
+                <h2 style="margin-bottom:10px;">Cambio Numero</h2>
+                <p style="font-size:14px; color:var(--text-light); margin-bottom:20px;">Richiedi l'aggiornamento del tuo numero di telefono associato all'ID.</p>
+                <input type="email" id="chg-email" class="input" placeholder="Email dell'account">
+                <input type="tel" id="chg-old" class="input" placeholder="Vecchio Numero (se ricordato)">
+                <input type="tel" id="chg-new" class="input" placeholder="Nuovo Numero Cellulare">
+                <button class="btn btn-primary" onclick="submitPhoneChange()">Invia Richiesta Sicura</button>
+                <button class="btn btn-outline" style="margin-top:10px;" onclick="toggleAuthMode('login')">Torna al Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-home" class="view">
+        <div class="header-mobile">
+            <h1 style="color:var(--primary);"><i class="ph-fill ph-shield-check" style="color:var(--accent)"></i> Sicurezza</h1>
+            <div class="user-avatar" id="home-avatar" onclick="nav('id')">H</div>
+        </div>
+
+        <p style="font-size:14px; color:var(--text-light); margin-bottom:20px; line-height:1.5;">Il codice OTP è richiesto per l'accesso e l'autorizzazione di operazioni sensibili.</p>
+
+        <div class="otp-container">
+            <div class="otp-circle">
+                <svg class="otp-svg">
+                    <circle class="otp-bg" cx="90" cy="90" r="80"></circle>
+                    <circle class="otp-progress" id="otp-progress-circle" cx="90" cy="90" r="80"></circle>
+                </svg>
+                <div class="otp-content">
+                    <div class="otp-value" id="otp-code">------</div>
+                    <div class="otp-label" id="otp-timer-text">Aggiornamento...</div>
+                </div>
+            </div>
+            
+            <div id="home-kyc-alert" style="display:none; margin-top:20px; width:100%; background:rgba(239, 68, 68, 0.2); padding:10px; border-radius:12px; border:1px solid rgba(239, 68, 68, 0.4); text-align:center;">
+                <p style="font-size:12px; color:#FECACA; font-weight:600;"><i class="ph-fill ph-warning"></i> OTP Inattivo. Completa il KYC in Identità.</p>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="font-size: 16px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                <i class="ph-fill ph-check-circle" style="color:var(--success)"></i> I Tuoi Servizi
+            </h3>
+            <span style="font-size: 12px; color:var(--accent); font-weight:600; cursor:pointer;" onclick="nav('servizi')">Vedi Catalogo</span>
+        </div>
+        <div id="home-active-services" style="margin-bottom:25px;">
+            <p style="font-size:13px; color:var(--text-light); text-align:center; padding:10px;">Caricamento in corso...</p>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="font-size: 16px; font-weight:800;">Registro Accessi</h3>
+            <span style="font-size: 12px; color:var(--text-light); background:var(--border); padding:4px 8px; border-radius:8px;">Live</span>
+        </div>
+        <div class="card" style="padding:0; overflow:hidden;" id="access-logs-list">
+            <div style="padding:20px; text-align:center; color:var(--text-light); font-size:13px;">Nessun accesso registrato.</div>
+        </div>
+    </div>
+
+    <div id="view-servizi" class="view">
+        <div class="header-mobile">
+            <h1><i class="ph-fill ph-squares-four" style="color:var(--accent)"></i> Catalogo Servizi</h1>
+        </div>
+        <p style="font-size:14px; color:var(--text-light); margin-bottom:20px;">Scegli e richiedi l'attivazione di nuovi servizi adatti al tuo profilo.</p>
+        
+        <div id="catalog-list">
+            <p style="font-size:14px; color:var(--text-light); text-align:center; padding:20px;">Sincronizzazione catalogo in corso...</p>
+        </div>
+    </div>
+
+    <div id="view-wallet" class="view">
+        <div class="header-mobile">
+            <h1><i class="ph-fill ph-wallet" style="color:var(--accent)"></i> Wallet</h1>
+        </div>
+        
+        <div class="card" style="background: linear-gradient(135deg, #10B981, #047857); color:white; border:none; padding:25px; box-shadow: 0 15px 25px rgba(16, 185, 129, 0.3);">
+            <div style="font-size:13px; opacity:0.9; font-weight:600; margin-bottom:5px;">Spese Totali Servizi</div>
+            <h1 style="font-size:42px; margin-bottom:20px; font-weight:800; letter-spacing:-1px;" id="wallet-totale">€ 0.00</h1>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.2); padding-top:15px;">
+                <span style="font-size:12px; font-weight:600;"><i class="ph-fill ph-shield-check"></i> Rete Horizon Sicura</span>
+                <span style="font-size:12px; font-weight:700; background:rgba(0,0,0,0.2); padding:4px 10px; border-radius:12px;">ID VALIDATO</span>
+            </div>
+        </div>
+
+        <h3 style="font-size: 16px; font-weight:800; margin-bottom:15px;">Fatture e Movimenti</h3>
+        <div class="card" style="padding:0; overflow:hidden;" id="transactions-list">
+            <div style="padding:20px; text-align:center; color:var(--text-light); font-size:13px;">Nessuna transazione.</div>
+        </div>
+    </div>
+
+    <div id="view-id" class="view">
+        <div class="header-mobile">
+            <h1><i class="ph-fill ph-identification-card" style="color:var(--accent)"></i> Profilo & ID</h1>
+        </div>
+        
+        <div class="digital-id" id="digital-id-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="ph-fill ph-planet" style="color:var(--accent); font-size:24px;"></i>
+                    <span style="font-weight:800; color:var(--primary); font-size:16px;">Horizon Net</span>
+                </div>
+                <span id="id-status-badge" class="badge" style="background:var(--danger); font-size:10px;">NON VERIFICATO</span>
+            </div>
+            
+            <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px;">
+                <div style="width:70px; height:70px; background:var(--bg); border:2px solid var(--accent); border-radius:16px; display:flex; align-items:center; justify-content:center;">
+                    <i class="ph-fill ph-user" style="font-size:35px; color:var(--primary);"></i>
+                </div>
+                <div>
+                    <h3 id="id-name" style="font-size:20px; font-weight:800; color:var(--primary);">...</h3>
+                    <p style="font-size:12px; color:var(--text-light); margin-top:2px;" id="id-ruolo">Utente Ecosistema</p>
+                </div>
+            </div>
+
+            <div style="background:rgba(241, 245, 249, 0.8); padding:12px; border-radius:12px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:11px; font-weight:600; color:var(--text-light);">DATI FISCALI</span>
+                    <span style="font-size:12px; font-family:monospace; font-weight:700;" id="id-piva">...</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:11px; font-weight:600; color:var(--text-light);">CELLULARE</span>
+                    <span style="font-size:12px; font-family:monospace; font-weight:700;" id="id-cell">...</span>
+                </div>
+            </div>
+            <div class="barcode"></div>
+        </div>
+
+        <div class="card" id="kyc-action-card" style="margin-top:20px; border:1px solid var(--danger); background:rgba(239,68,68,0.02);">
+            <div class="card-title" style="color:var(--danger)"><i class="ph-fill ph-shield-warning"></i> Sblocco Sicurezza Richiesto</div>
+            <p id="kyc-desc" style="font-size:13px; color:var(--text-light); margin-bottom:15px; line-height:1.5;">Per sbloccare il generatore OTP e i servizi Horizon, devi completare l'identificazione caricando i tuoi documenti.</p>
+            <button id="btn-start-kyc" class="btn btn-primary" onclick="nav('kyc')"><i class="ph-fill ph-scan"></i> Avvia Identificazione</button>
+        </div>
+
+        <h3 style="font-size: 14px; font-weight:700; color:var(--text-light); text-transform:uppercase; margin:25px 0 10px;">Assistenza & Impostazioni</h3>
+        <div class="card" style="padding:10px 20px;">
+            <div class="list-item" onclick="openSupportModal()">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div class="list-icon" style="background:rgba(16,185,129,0.1); color:var(--success);"><i class="ph-fill ph-headset"></i></div>
+                    <span style="font-weight:600; font-size:15px;">Apri Ticket Supporto</span>
+                </div>
+                <i class="ph ph-caret-right" style="color:var(--text-light)"></i>
+            </div>
+            <div class="list-item" onclick="logout()">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div class="list-icon" style="background:rgba(239, 68, 68, 0.1); color:var(--danger);"><i class="ph-fill ph-sign-out"></i></div>
+                    <span style="font-weight:600; font-size:15px; color:var(--danger);">Disconnetti Dispositivo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-kyc" class="view" style="background:var(--card); z-index:2000;">
+        <div class="header-mobile">
+            <button class="btn btn-outline" style="width:auto; padding:10px; border-radius:12px; border:none; background:var(--bg);" onclick="nav('id')"><i class="ph ph-x" style="font-size:20px;"></i></button>
+            <h1 style="font-size:20px;">Riconoscimento</h1>
+            <div style="width:40px;"></div>
+        </div>
+        
+        <p style="font-size:14px; color:var(--text-light); margin-bottom:25px; line-height:1.5;">Completa questi 3 passaggi per verificare la tua identità e sbloccare tutte le funzionalità dell'App.</p>
+
+        <div class="card-title" style="color:var(--primary); font-size:15px;">1. Documento Fronte</div>
+        <div class="upload-box" onclick="document.getElementById('file-fronte').click()">
+            <i class="ph-fill ph-id-card"></i>
+            <p style="font-size:14px; font-weight:700; color:var(--primary);">Tocca per scattare</p>
+            <input type="file" id="file-fronte" accept="image/*" style="display:none;" onchange="previewImg(this, 'img-fronte')">
+            <img id="img-fronte">
+        </div>
+
+        <div class="card-title" style="color:var(--primary); font-size:15px; margin-top:25px;">2. Documento Retro</div>
+        <div class="upload-box" onclick="document.getElementById('file-retro').click()">
+            <i class="ph-fill ph-credit-card"></i>
+            <p style="font-size:14px; font-weight:700; color:var(--primary);">Tocca per scattare</p>
+            <input type="file" id="file-retro" accept="image/*" style="display:none;" onchange="previewImg(this, 'img-retro')">
+            <img id="img-retro">
+        </div>
+
+        <div class="card-title" style="color:var(--primary); font-size:15px; margin-top:25px;">3. Biometria Volto (Video)</div>
+        <p style="font-size:13px; color:var(--text-light); margin-bottom:15px;">Inquadra il tuo viso e registra un video di 3-4 secondi annuendo leggermente per confermare la vitalità.</p>
+        
+        <div class="video-container">
+            <video id="camera-stream" autoplay muted playsinline></video>
+            <video id="camera-playback" controls style="display:none;"></video>
+            <div class="recording-indicator" id="rec-indicator"><i class="ph-fill ph-record"></i> REC</div>
+            
+            <div id="cam-placeholder" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; z-index:5;">
+                <i class="ph-fill ph-user-focus" style="font-size:60px; margin-bottom:10px; opacity:0.8;"></i>
+                <span style="font-size:14px; font-weight:600;">Videocamera disattiva</span>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-bottom:30px;" id="video-controls">
+            <button class="btn btn-outline" style="border-color:var(--border);" id="btn-start-cam" onclick="startCamera()"><i class="ph-fill ph-camera"></i> Attiva Fotocamera</button>
+            <button class="btn btn-danger" id="btn-record" style="display:none; box-shadow:0 4px 15px rgba(239,68,68,0.4);" onclick="toggleRecording()"><i class="ph-fill ph-video-camera"></i> Inizia Registrazione</button>
+            <button class="btn btn-outline" id="btn-retake" style="display:none;" onclick="startCamera()"><i class="ph ph-arrows-clockwise"></i> Ripeti Video</button>
+        </div>
+
+        <button class="btn btn-primary" style="margin-bottom: 40px; padding:18px; font-size:18px;" onclick="submitKYC()"><i class="ph-fill ph-shield-check"></i> Invia per la Verifica</button>
+    </div>
+
+    <div id="modal-support" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 10px;">Richiesta Supporto</h3>
+            <p style="font-size:13px; color:var(--text-light); margin-bottom:20px;">Descrivi il problema, un operatore Horizon ti contatterà.</p>
+            <select id="sup-oggetto" class="input">
+                <option value="Problema Tecnico App">Problema Tecnico App</option>
+                <option value="Informazioni Servizio">Informazioni su un Servizio</option>
+                <option value="Fatturazione">Problemi di Fatturazione</option>
+                <option value="Altro">Altro</option>
+            </select>
+            <textarea id="sup-messaggio" class="input" placeholder="Scrivi qui il tuo messaggio..." style="min-height: 100px; resize:none;"></textarea>
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline" onclick="closeSupportModal()">Annulla</button>
+                <button class="btn btn-primary" onclick="submitSupportTicket()">Invia Richiesta</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="app-bottom-nav" style="display:none;">
+        <div class="nav-item active" onclick="nav('home', this)">
+            <i class="ph-fill ph-shield-check"></i>
+            <span>Sicurezza</span>
+        </div>
+        <div class="nav-item" onclick="nav('servizi', this)">
+            <i class="ph-fill ph-squares-four"></i>
+            <span>Catalogo</span>
+        </div>
+        <div class="nav-item" onclick="nav('wallet', this)">
+            <i class="ph-fill ph-wallet"></i>
+            <span>Wallet</span>
+        </div>
+        <div class="nav-item" onclick="nav('id', this)">
+            <i class="ph-fill ph-identification-card"></i>
+            <span>ID Profilo</span>
+        </div>
+    </nav>
+
+    <script>
+        // Variabili Globali
+        let currentUser = null;
+        let userData = null;
+        let otpInterval = null;
+        let isApproved = false;
+        let cacheServizi = []; 
+        let isRegistering = false; // FLAG DI SICUREZZA PER EVITARE AUTO-LOGIN MENTRE CI SI REGISTRA
+
+        // Temp Register Data
+        let tempRegData = {};
+
+        // Variabili Video WebRTC
+        let mediaRecorder;
+        let recordedChunks = [];
+        let videoBlob = null;
+        let stream = null;
+        let isRecording = false;
+
+        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dxblnwvuq/auto/upload"; 
+        const CLOUDINARY_PRESET = "horizon_docs"; 
+
+        window.addEventListener('DOMContentLoaded', () => {
+             window.firebaseAPI.onAuthStateChanged(window.auth, async (user) => {
+                 // SE L'UTENTE SI STA REGISTRANDO, IGNORA QUESTO LISTENER!
+                 if (isRegistering) return; 
+
+                 if (user) {
+                     // Verifica di sicurezza: l'utente ha davvero finito la registrazione sul database?
+                     const userRef = window.firebaseAPI.ref(window.db, `users/${user.uid}`);
+                     const snap = await window.firebaseAPI.get(userRef);
+                     
+                     if(snap.exists()) {
+                         currentUser = user;
+                         nav('home');
+                         initAppEcosystem(); 
+                     } else {
+                         // Account orfano o registrazione interrotta, va pulito
+                         window.firebaseAPI.signOut(window.auth);
+                     }
+                 } else {
+                     currentUser = null;
+                     stopOTP();
+                     nav('auth');
+                 }
+             });
+        });
+
+        function nav(id, element = null) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + id).classList.add('active');
+            
+            const bottomNav = document.getElementById('app-bottom-nav');
+            if(id === 'auth' || id === 'kyc') {
+                bottomNav.style.display = 'none';
+            } else {
+                bottomNav.style.display = 'flex';
+                if(element) {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    element.classList.add('active');
+                } else {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    let targetNav = document.querySelector(`.nav-item[onclick="nav('${id}', this)"]`);
+                    if(targetNav) targetNav.classList.add('active');
+                }
+            }
+            
+            if(id !== 'kyc' && stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
+        function toggleAuthMode(mode) {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('sms-verify-form').style.display = 'none';
+            document.getElementById('change-phone-form').style.display = 'none';
+            
+            if(mode === 'login') document.getElementById('login-form').style.display = 'block';
+            if(mode === 'register') document.getElementById('register-form').style.display = 'block';
+            if(mode === 'phoneChange') document.getElementById('change-phone-form').style.display = 'block';
+        }
+
+        function showLoader(text) {
+            document.getElementById('loader-text').innerText = text;
+            document.getElementById('global-loader').style.display = 'flex';
+        }
+        function hideLoader() { document.getElementById('global-loader').style.display = 'none'; }
+
+        // --- AUTH & SMS FIREBASE VERA ---
+        async function initRegistration() {
+            tempRegData.tipo = document.getElementById('reg-tipo').value;
+            tempRegData.nome = document.getElementById('reg-nome').value;
+            tempRegData.cf = document.getElementById('reg-cf').value;
+            tempRegData.cellulare = document.getElementById('reg-cell').value.trim();
+            tempRegData.email = document.getElementById('reg-email').value;
+            tempRegData.pass = document.getElementById('reg-pass').value;
+
+            if(!tempRegData.nome || !tempRegData.cf || !tempRegData.email || !tempRegData.pass || !tempRegData.cellulare) {
+                return alert("Compila tutti i campi richiesti.");
+            }
+            if(!tempRegData.cellulare.startsWith('+')) {
+                return alert("Inserisci il prefisso internazionale per il cellulare (es. +39)");
+            }
+
+            // BLOCCO L'AUTO-LOGIN DI FIREBASE
+            isRegistering = true;
+            showLoader("Avvio verifica di sicurezza...");
+            
+            try {
+                // 1. Creazione Utente con Email
+                const cred = await window.firebaseAPI.createUserWithEmailAndPassword(window.auth, tempRegData.email, tempRegData.pass);
+                
+                // 2. Invio Email di Verifica
+                await window.firebaseAPI.sendEmailVerification(cred.user);
+
+                // 3. Preparazione Recaptcha e invio SMS
+                window.recaptchaVerifier = new window.firebaseAPI.RecaptchaVerifier(window.auth, 'recaptcha-container', { 'size': 'invisible' });
+                window.confirmationResult = await window.firebaseAPI.linkWithPhoneNumber(cred.user, tempRegData.cellulare, window.recaptchaVerifier);
+
+                hideLoader();
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('sms-verify-form').style.display = 'block';
+
+            } catch (e) {
+                isRegistering = false; // Rilascio il blocco in caso di errore
+                hideLoader();
+                if(e.code === 'auth/email-already-in-use') alert("Email già registrata.");
+                else if(e.code === 'auth/invalid-phone-number') alert("Numero di cellulare non valido. Ricorda il prefisso (es. +39).");
+                else alert("Errore di registrazione: " + e.message);
+            }
+        }
+
+        async function confirmRegistration() {
+            const smsCode = document.getElementById('reg-sms-code').value;
+            if(!smsCode || smsCode.length < 6) return alert("Inserisci il codice OTP a 6 cifre inviato via SMS.");
+
+            showLoader("Completamento Anagrafica...");
+            try {
+                // 4. Conferma Codice SMS
+                await window.confirmationResult.confirm(smsCode);
+
+                // 5. Scrittura Database Realtime
+                const uid = window.auth.currentUser.uid;
+                await window.firebaseAPI.set(window.firebaseAPI.ref(window.db, `users/${uid}`), {
+                    uid: uid,
+                    tipo: tempRegData.tipo,
+                    nome: tempRegData.nome,
+                    email: tempRegData.email,
+                    cellulare: tempRegData.cellulare,
+                    piva_cf: tempRegData.cf.toUpperCase(),
+                    dataRegistrazione: new Date().toISOString(),
+                    statoVerifica: "mancante",
+                    access_logs: {},
+                    wallet: { saldo: 0 }
+                });
+                
+                hideLoader();
+                alert("Account Creato! Ricordati di cliccare sul link inviato alla tua email per confermarla.");
+                
+                // Fine processo di registrazione, adesso posso far entrare l'utente e portarlo obbligatoriamente al KYC
+                isRegistering = false;
+                currentUser = window.auth.currentUser;
+                await initAppEcosystem();
+                
+                // LO PORTO DIRETTAMENTE ALLA FOTOCAMERA
+                nav('kyc');
+
+            } catch (e) { 
+                hideLoader(); 
+                alert("Codice SMS errato o scaduto. Riprova."); 
+            }
+        }
+
+        async function submitPhoneChange() {
+            const email = document.getElementById('chg-email').value;
+            const oldPhone = document.getElementById('chg-old').value;
+            const newPhone = document.getElementById('chg-new').value;
+
+            if(!email || !newPhone) return alert("Compila email e nuovo numero.");
+            showLoader("Invio richiesta in corso...");
+            try {
+                await window.firebaseAPI.push(window.firebaseAPI.ref(window.db, `cambio_numero_requests`), {
+                    email: email,
+                    vecchioNumero: oldPhone || 'Non fornito',
+                    nuovoNumero: newPhone,
+                    data: new Date().toISOString(),
+                    stato: 'In Attesa'
+                });
+                hideLoader();
+                alert("Richiesta inviata. Il supporto aggiornerà il numero a breve.");
+                toggleAuthMode('login');
+            } catch(e) { hideLoader(); alert("Errore: " + e.message); }
+        }
+
+        async function login() {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            if(!email || !pass) return alert("Inserisci email e password.");
+            showLoader("Verifica Credenziali...");
+            try {
+                await window.firebaseAPI.signInWithEmailAndPassword(window.auth, email, pass);
+            } catch (e) { hideLoader(); alert("Credenziali errate."); }
+        }
+
+        function logout() { window.firebaseAPI.signOut(window.auth); }
+
+        async function initAppEcosystem() {
+            const userRef = window.firebaseAPI.ref(window.db, `users/${currentUser.uid}`);
+            
+            const snap = await window.firebaseAPI.get(userRef);
+            if(snap.exists()) {
+                let data = snap.val();
+                let updates = {};
+                if(data.access_logs === undefined) updates['access_logs'] = { dummy: true };
+                if(data.auth_pins === undefined) updates['auth_pins'] = { current: "000000" };
+                
+                if(Object.keys(updates).length > 0) await window.firebaseAPI.update(userRef, updates);
+                await writeAccessLog("Login App Effettuato");
+            }
+
+            // Ascolto Catalogo Globale Servizi
+            window.firebaseAPI.onValue(window.firebaseAPI.ref(window.db, 'servizi_catalogo'), (catSnap) => {
+                if(catSnap.exists()) {
+                    let catData = [];
+                    catSnap.forEach(child => { catData.push(child.val()); });
+                    cacheServizi = catData;
+                } else {
+                    const defaultCat = {
+                        1: { id:1, nome: "Assistenza Prioritaria H24", target: "Entrambi", descrizione: "Supporto dedicato con SLA 2 ore per qualsiasi problema o malfunzionamento." },
+                        2: { id:2, nome: "Consulenza Fiscale Premium", target: "Azienda", descrizione: "Consulente dedicato per la gestione amministrativa e fatturazione della tua azienda." },
+                        3: { id:3, nome: "SPID Livello 3 (Hardware)", target: "Cittadino", descrizione: "Emissione Smart Card fisica di massima sicurezza per l'identificazione nei portali di stato." }
+                    };
+                    window.firebaseAPI.set(window.firebaseAPI.ref(window.db, 'servizi_catalogo'), defaultCat);
+                }
+            });
+
+            // Ascolto Realtime Profilo
+            window.firebaseAPI.onValue(userRef, (snapshot) => {
+                if(snapshot.exists()) {
+                    userData = snapshot.val();
+                    isApproved = (userData.statoVerifica === 'approvato');
+                    updateUI();
+                    
+                    if(isApproved && !otpInterval) startOTP();
+                    if(!isApproved) stopOTP();
+                }
+            });
+        }
+
+        async function writeAccessLog(action) {
+            const logsRef = window.firebaseAPI.ref(window.db, `users/${currentUser.uid}/access_logs`);
+            const now = new Date();
+            const timeString = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT');
+            const device = (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) ? 'Mobile Device' : 'Web Browser';
+
+            await window.firebaseAPI.push(logsRef, {
+                timestamp: timeString, action: action, device: device, status: 'Success'
+            });
+        }
+
+        // --- SISTEMA SPID: GENERATORE OTP SINCRONIZZATO ---
+        function startOTP() {
+            document.getElementById('home-kyc-alert').style.display = 'none';
+            generateAndSyncOTP();
+            otpInterval = setInterval(generateAndSyncOTP, 50000); 
+        }
+
+        function stopOTP() {
+            if(otpInterval) clearInterval(otpInterval);
+            otpInterval = null;
+            document.getElementById('otp-code').innerText = "BLOCCO";
+            document.getElementById('otp-code').style.color = "var(--danger)";
+            document.getElementById('otp-progress-circle').style.strokeDashoffset = 502; 
+            document.getElementById('otp-timer-text').innerText = "SBLOCCO RICHIESTO";
+            document.getElementById('home-kyc-alert').style.display = 'block';
+        }
+
+        function generateAndSyncOTP() {
+            const pin = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = Date.now() + 50000;
+            
+            window.firebaseAPI.set(window.firebaseAPI.ref(window.db, `users/${currentUser.uid}/auth_pins`), {
+                current_pin: pin, expires_at: expiresAt
+            });
+
+            document.getElementById('otp-code').innerText = pin.substring(0,3) + " " + pin.substring(3,6);
+            document.getElementById('otp-code').style.color = "white";
+            
+            const circle = document.getElementById('otp-progress-circle');
+            circle.style.transition = 'none';
+            circle.style.strokeDashoffset = '0';
+            circle.style.stroke = "var(--success)";
+            
+            circle.getBoundingClientRect(); // Reflow
+            
+            circle.style.transition = 'stroke-dashoffset 50s linear, stroke 50s ease';
+            circle.style.strokeDashoffset = '502'; 
+            circle.style.stroke = "var(--danger)"; 
+            
+            document.getElementById('otp-timer-text').innerText = "Codice Valido";
+        }
+
+        // --- RENDER UI ECOSISTEMA ---
+        function updateUI() {
+            const initial = userData.nome.charAt(0).toUpperCase();
+            document.getElementById('home-avatar').innerText = initial;
+            
+            document.getElementById('id-name').innerText = userData.nome;
+            document.getElementById('id-ruolo').innerText = userData.tipo || "Utente";
+            document.getElementById('id-piva').innerText = userData.piva_cf;
+            document.getElementById('id-cell').innerText = userData.cellulare || "N/A";
+            document.getElementById('id-uid').innerText = userData.uid.substring(0,8) + '...';
+            
+            const badgeID = document.getElementById('id-status-badge');
+            const kycActionCard = document.getElementById('kyc-action-card');
+            
+            if(isApproved) {
+                badgeID.innerText = "VERIFICATO"; 
+                badgeID.style.background = "var(--success)";
+                document.getElementById('digital-id-card').classList.remove('locked');
+                kycActionCard.style.display = 'none';
+            } else if(userData.statoVerifica === 'in_attesa') {
+                badgeID.innerText = "IN REVISIONE"; 
+                badgeID.style.background = "var(--warning)";
+                document.getElementById('digital-id-card').classList.add('locked');
+                kycActionCard.style.display = 'none';
+            } else {
+                badgeID.innerText = "BLOCCATO"; 
+                badgeID.style.background = "var(--danger)";
+                document.getElementById('digital-id-card').classList.add('locked');
+                kycActionCard.style.display = 'block';
+            }
+
+            renderLogs(userData.access_logs || {});
+            renderOrdini(userData.ordini || {});
+            renderCatalogo();
+        }
+
+        function renderLogs(logsObj) {
+            const list = document.getElementById('access-logs-list');
+            const logs = Object.values(logsObj).filter(l => l.timestamp); 
+            
+            if(logs.length === 0) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-light); font-size:13px;">Nessun accesso recente.</div>';
+                return;
+            }
+
+            logs.sort((a,b) => {
+                const dateA = a.timestamp.split(' '); const dateB = b.timestamp.split(' ');
+                if(!dateA[1] || !dateB[1]) return 0;
+                return dateB[0].split('/').reverse().join('') + dateB[1] > dateA[0].split('/').reverse().join('') + dateA[1] ? 1 : -1;
+            });
+
+            list.innerHTML = logs.slice(0,4).map(l => `
+                <div class="list-item" style="padding: 15px 20px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:36px; height:36px; background:rgba(34, 197, 94, 0.1); color:var(--success); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;">
+                            <i class="ph-fill ph-device-mobile"></i>
+                        </div>
+                        <div>
+                            <strong style="font-size:13px; display:block; color:var(--primary);">${l.action}</strong>
+                            <span style="font-size:11px; color:var(--text-light);">${l.device}</span>
+                        </div>
+                    </div>
+                    <span style="font-size:11px; font-weight:700; color:var(--text-light);">${l.timestamp.split(' ')[1].substring(0,5)}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderOrdini(ordiniObj) {
+            const ordini = Object.values(ordiniObj);
+            const activeHome = document.getElementById('home-active-services');
+            const listWallet = document.getElementById('transactions-list');
+            
+            if(ordini.length === 0) {
+                activeHome.innerHTML = '<div class="card" style="padding:15px; text-align:center; color:var(--text-light); font-size:13px;">Nessun servizio attivo. Visita il catalogo.</div>';
+                listWallet.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-light); font-size:14px;">Nessuna transazione.</div>';
+                document.getElementById('wallet-totale').innerText = "€ 0.00";
+                return;
+            }
+
+            ordini.sort((a,b) => new Date(b.data) - new Date(a.data));
+            
+            let totalSpent = ordini.filter(o => o.stato !== 'Annullato').reduce((sum, o) => sum + parseFloat(o.importo || 0), 0);
+            document.getElementById('wallet-totale').innerText = `€ ${totalSpent.toLocaleString()}`;
+
+            let ordiniAttivi = ordini.filter(o => o.stato !== 'Annullato');
+            if(ordiniAttivi.length === 0) {
+                activeHome.innerHTML = '<div class="card" style="padding:15px; text-align:center; color:var(--text-light); font-size:13px;">Nessun servizio attivo.</div>';
+            } else {
+                activeHome.innerHTML = ordiniAttivi.map(o => {
+                    let badgeCol = o.stato === 'Attivo' ? 'var(--success)' : (o.stato === 'In Lavorazione' || o.stato === 'In Attivazione' ? 'var(--accent)' : 'var(--warning)');
+                    return `
+                    <div class="card" style="padding:15px; border-radius:16px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                            <strong style="color:var(--primary); font-size:15px;">${o.servizio}</strong>
+                            <span class="badge" style="background:${badgeCol};">${o.stato}</span>
+                        </div>
+                        <p style="font-size:12px; color:var(--text-light);">Richiesto: ${o.data}</p>
+                    </div>`;
+                }).join('');
+            }
+
+            listWallet.innerHTML = ordini.filter(o => o.importo > 0).map((o, index, arr) => `
+                <div class="list-item" style="padding: 15px 20px; ${index === arr.length - 1 ? 'border:none;' : ''}">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px; height:40px; background:rgba(239,68,68,0.1); color:var(--danger); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px;">
+                            <i class="ph-bold ph-arrow-down-left"></i>
+                        </div>
+                        <div>
+                            <strong style="font-size:13px; display:block;">${o.servizio}</strong>
+                            <span style="font-size:11px; color:var(--text-light);">${o.data}</span>
+                        </div>
+                    </div>
+                    <strong style="color:var(--primary); font-size:15px; font-weight:800;">- € ${o.importo.toLocaleString()}</strong>
+                </div>
+            `).join('') || '<div style="padding:20px; text-align:center; color:var(--text-light); font-size:14px;">Nessuna transazione fatturata.</div>';
+        }
+
+        function renderCatalogo() {
+            const listCat = document.getElementById('catalog-list');
+            const mioTipo = userData.tipo || 'Cittadino'; 
+
+            let serviziDisp = cacheServizi.filter(s => s.target === 'Entrambi' || s.target === mioTipo);
+
+            if(serviziDisp.length === 0) {
+                listCat.innerHTML = '<p style="font-size:14px; color:var(--text-light); text-align:center; padding:20px;">Nessun servizio disponibile per il tuo profilo.</p>';
+                return;
+            }
+
+            listCat.innerHTML = serviziDisp.map(s => `
+                <div class="card" style="padding:18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <h3 style="font-size:16px; color:var(--primary);">${s.nome}</h3>
+                        <div style="width:36px; height:36px; background:rgba(37,99,235,0.1); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--accent); font-size:20px;"><i class="ph-fill ph-plus-circle"></i></div>
+                    </div>
+                    <p style="font-size:13px; color:var(--text-light); line-height:1.4; margin: 10px 0;">${s.descrizione}</p>
+                    <button class="btn btn-outline" style="padding:10px; font-size:14px; border-color:var(--accent); color:var(--accent);" onclick="requestService('${s.nome}')">Richiedi Attivazione</button>
+                </div>
+            `).join('');
+        }
+
+        // --- SUPPORTO & RICHIESTA SERVIZI ---
+        function openSupportModal() { document.getElementById('modal-support').classList.add('active'); }
+        function closeSupportModal() { document.getElementById('modal-support').classList.remove('active'); document.getElementById('sup-messaggio').value = ''; }
+
+        async function submitSupportTicket() {
+            const subj = document.getElementById('sup-oggetto').value;
+            const msg = document.getElementById('sup-messaggio').value;
+            if(!msg) return alert("Inserisci un messaggio per l'operatore.");
+
+            showLoader("Apertura Ticket...");
+            try {
+                await window.firebaseAPI.push(window.firebaseAPI.ref(window.db, `support_tickets`), {
+                    uidUtente: currentUser.uid, nomeUtente: userData.nome, oggetto: subj, messaggio: msg, data: new Date().toISOString(), stato: 'Aperto'
+                });
+                hideLoader();
+                alert("Richiesta inviata con successo. Riceverai risposta a breve.");
+                closeSupportModal();
+            } catch (e) { hideLoader(); alert("Errore invio: " + e.message); }
+        }
+
+        async function requestService(nomeServizio) {
+            if(!isApproved) return alert("Devi prima completare l'identificazione (KYC) nella sezione ID per richiedere nuovi servizi.");
+            if(confirm(`Confermi la richiesta di attivazione per: ${nomeServizio}? Un operatore la prenderà in carico nel Gestionale Horizon.`)) {
+                
+                showLoader("Inoltro richiesta...");
+                try {
+                    const newId = Date.now();
+                    const reqData = {
+                        id: newId, clienteId: currentUser.uid, tipoCliente: userData.tipo, servizio: nomeServizio,
+                        note: "Richiesto tramite App Mobile", importo: 0, stato: 'Richiesto',
+                        data: new Date().toISOString().split('T')[0], nomeCognome: userData.nome, cf: userData.piva_cf
+                    };
+
+                    await window.firebaseAPI.set(window.firebaseAPI.ref(window.db, `users/${currentUser.uid}/ordini/${newId}`), reqData);
+                    await window.firebaseAPI.set(window.firebaseAPI.ref(window.db, `ordini_ricevuti/${newId}`), reqData);
+                    await writeAccessLog(`Richiesto Servizio: ${nomeServizio}`);
+                    
+                    hideLoader();
+                    alert("Servizio richiesto con successo! Lo troverai tra i tuoi servizi attivi nella Home.");
+                    nav('home');
+                } catch(e) { hideLoader(); alert("Errore: " + e.message); }
+            }
+        }
+
+        // --- KYC VIDEO & FOTO (INTATTO) ---
+        function previewImg(input, imgId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById(imgId);
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    input.parentElement.querySelector('i').style.display = 'none';
+                    input.parentElement.querySelector('p').style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+                const videoEl = document.getElementById('camera-stream');
+                videoEl.srcObject = stream;
+                videoEl.style.display = 'block';
+                
+                document.getElementById('cam-placeholder').style.display = 'none';
+                document.getElementById('camera-playback').style.display = 'none';
+                document.getElementById('btn-start-cam').style.display = 'none';
+                document.getElementById('btn-record').style.display = 'flex';
+                document.getElementById('btn-retake').style.display = 'none';
+                videoBlob = null;
+            } catch (err) { alert("Attenzione: Permessi fotocamera negati. Consenti per proseguire."); }
+        }
+
+        function toggleRecording() {
+            const btn = document.getElementById('btn-record');
+            if(!isRecording) {
+                recordedChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const playback = document.getElementById('camera-playback');
+                    playback.src = URL.createObjectURL(videoBlob);
+                    document.getElementById('camera-stream').style.display = 'none';
+                    playback.style.display = 'block';
+                    
+                    document.getElementById('btn-record').style.display = 'none';
+                    document.getElementById('btn-retake').style.display = 'flex';
+                    stream.getTracks().forEach(track => track.stop()); 
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                btn.innerHTML = '<i class="ph-fill ph-stop"></i> Ferma';
+                btn.style.background = 'var(--text)';
+                document.getElementById('rec-indicator').style.display = 'flex';
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.innerHTML = '<i class="ph-fill ph-video-camera"></i> Inizia Registrazione';
+                btn.style.background = 'var(--danger)';
+                document.getElementById('rec-indicator').style.display = 'none';
+            }
+        }
+
+        async function uploadFileToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_PRESET);
+            
+            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+            const data = await res.json();
+            if(data.error) throw new Error(data.error.message);
+            return data.secure_url; 
+        }
+
+        async function submitKYC() {
+            const fileFronte = document.getElementById('file-fronte').files[0];
+            const fileRetro = document.getElementById('file-retro').files[0];
+
+            if(!fileFronte || !fileRetro) return alert("Inserisci fronte e retro del documento.");
+            if(!videoBlob) return alert("Registra il video per confermare la tua identità.");
+
+            showLoader("Invio crittografato in corso...");
+            try {
+                const [urlFronte, urlRetro, urlVideo] = await Promise.all([
+                    uploadFileToCloudinary(fileFronte), uploadFileToCloudinary(fileRetro), uploadFileToCloudinary(videoBlob) 
+                ]);
+
+                await window.firebaseAPI.update(window.firebaseAPI.ref(window.db, `users/${currentUser.uid}`), {
+                    statoVerifica: 'in_attesa', documenti: { fronte: urlFronte, retro: urlRetro, video: urlVideo }
+                });
+                
+                await writeAccessLog("Upload Documenti KYC");
+
+                hideLoader();
+                alert("Dati inviati con successo! Lo staff valuterà la tua richiesta a breve.");
+                nav('id');
+            } catch (e) {
+                hideLoader();
+                alert("Errore caricamento: " + e.message);
+            }
+        }
+    </script>
+</body>
+</html>
