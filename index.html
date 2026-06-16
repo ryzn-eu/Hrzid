@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Link al manifest -->
-<link rel="manifest" href="manifest.json">
-<!-- Theme color per la barra di stato mobile -->
-<meta name="theme-color" content="#000000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Horizon ID | Master Ecosystem App</title>
@@ -65,6 +58,221 @@
             border-radius: 10px;
         }
     </style>
+    
+    <script>
+        (function() {
+            var isPwa = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone === true || 
+                        window.location.search.includes('mode=pwa');
+            
+            if (!isPwa) {
+                var style = document.createElement('style');
+                style.id = 'pwa-lock-style';
+                style.innerHTML = 'body { display: none !important; }';
+                document.head.appendChild(style);
+                
+                window.addEventListener('DOMContentLoaded', function() {
+                    var lockStyle = document.getElementById('pwa-lock-style');
+                    if(lockStyle) lockStyle.remove();
+                    
+                    var lockDiv = document.createElement('div');
+                    lockDiv.id = 'pwa-lock-screen';
+                    lockDiv.className = 'fixed inset-0 z-[10000] bg-black flex items-center justify-center p-4 select-none overflow-y-auto';
+                    lockDiv.style.background = 'radial-gradient(circle at 50% 30%, #1c1c1e 0%, #000000 100%)';
+                    
+                    var innerContent = `
+                        <div class="w-full max-w-md glass-panel p-6 rounded-[32px] shadow-2xl text-center border border-white/10 my-8" style="background: rgba(28, 28, 30, 0.75); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
+                            <div class="inline-flex p-4 bg-[#0A84FF]/10 rounded-2xl border border-[#0A84FF]/20 mb-4 animate-pulse">
+                                <i class="ph-fill ph-cell-tower text-4xl text-[#0A84FF]"></i>
+                            </div>
+                            <h1 class="text-2xl font-extrabold tracking-tight text-white mb-2">Installazione Richiesta</h1>
+                            <p class="text-sm text-gray-400 mb-6 leading-relaxed">Per garantire la massima sicurezza e stabilità, l'ecosistema <strong>Horizon ID</strong> deve essere eseguito esclusivamente come App installata sul dispositivo.</p>
+                            
+                            <div class="mb-6 inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
+                                <span class="w-2 h-2 rounded-full bg-[#0A84FF] animate-pulse"></span>
+                                <span id="detected-os-badge" class="text-xs font-bold text-gray-300 uppercase tracking-wider">Rilevamento sistema...</span>
+                            </div>
+
+                            <div id="android-instructions" class="hidden text-left space-y-4">
+                                <button id="pwa-install-btn" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
+                                    <i class="ph-bold ph-download-simple text-lg"></i>
+                                    Installa Horizon ID ora
+                                </button>
+                                <div class="bg-white/5 border border-white/10 rounded-[20px] p-4 space-y-3">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Installazione Manuale (Alternativa)</p>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">1</span>
+                                        <p class="text-xs">Tocca i tre puntini in alto a destra <i class="ph-bold ph-dots-three-vertical inline text-base text-[#0A84FF]"></i> nella barra di Chrome.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                        <p class="text-xs">Nel menu che si apre, individua e seleziona la voce <strong class="text-white">"Installa app"</strong> o <strong class="text-white">"Aggiungi a schermata Home"</strong> <i class="ph-bold ph-arrow-right inline text-xs text-gray-500"></i>.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="pc-instructions" class="hidden text-left space-y-4">
+                                <button id="pwa-install-btn-pc" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
+                                    <i class="ph-bold ph-desktop text-lg"></i>
+                                    Installa su Desktop
+                                </button>
+                                <div class="bg-white/5 border border-white/10 rounded-[20px] p-4 space-y-3">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Installazione tramite Browser</p>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">1</span>
+                                        <p class="text-xs">Guarda la barra degli indirizzi in alto. Troverai l'icona di installazione <i class="ph-bold ph-download-simple inline text-base text-[#0A84FF]"></i> sul lato destro.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                        <p class="text-xs">In alternativa, clicca sul menu delle opzioni <i class="ph-bold ph-dots-three-vertical inline text-base text-[#0A84FF]"></i> (o tre lineette) e seleziona <strong class="text-white">"Salva e installa"</strong> <i class="ph-bold ph-arrow-right inline text-xs text-gray-500"></i> <strong class="text-white">"Installa pagina come app"</strong>.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="ios-generic-instructions" class="hidden text-left bg-white/5 border border-white/10 rounded-[20px] p-4 space-y-3">
+                                <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Guida Passo-Passo iOS / iPadOS</p>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-[#0A84FF] flex items-center justify-center text-[11px] font-bold mt-0.5 text-white">1</span>
+                                    <p class="text-xs">Usa il browser <strong class="text-white">Safari</strong> ed individua l'icona di condivisione <i class="ph-bold ph-share-network text-[#0A84FF] inline text-base mx-0.5"></i> in basso sullo schermo dell'iPhone (o in alto a destra su iPad).</p>
+                                </div>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                    <p class="text-xs">Scorri verticalmente il menu delle opzioni comparso <i class="ph-bold ph-arrow-down inline text-xs text-gray-500"></i>.</p>
+                                </div>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">3</span>
+                                    <p class="text-xs">Seleziona la voce <strong class="text-white">"Aggiungi alla schermata Home"</strong> <i class="ph-bold ph-plus-square text-[#0A84FF] inline text-base mx-0.5"></i>.</p>
+                                </div>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">4</span>
+                                    <p class="text-xs">Tocca infine la voce <strong class="text-white">"Aggiungi"</strong> nell'angolo in alto a destra per completare l'operazione.</p>
+                                </div>
+                            </div>
+
+                            <div id="ios-safari-warning" class="hidden mt-4 bg-[#FF9F0A]/10 border border-[#FF9F0A]/20 p-4 rounded-xl text-left">
+                                <p class="text-xs text-[#FF9F0A] leading-relaxed font-semibold">
+                                    <i class="ph-fill ph-warning inline text-sm mr-1"></i> <strong>Attenzione:</strong> Se sei all'interno di un'altra applicazione (Telegram, WhatsApp, Chrome) devi riaprire questo link copiandolo ed incollandolo direttamente dentro l'app nativa <strong class="text-white">Safari</strong> altrimenti l'opzione di installazione non sarà visibile.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    lockDiv.innerHTML = innerContent;
+                    document.body.appendChild(lockDiv);
+                    
+                    // Motore di parsing approfondito del User Agent
+                    var ua = navigator.userAgent;
+                    var isiOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+                    var isAndroid = /Android/i.test(ua);
+                    
+                    var badge = document.getElementById('detected-os-badge');
+                    var androidBox = document.getElementById('android-instructions');
+                    var pcBox = document.getElementById('pc-instructions');
+                    var iosBox = document.getElementById('ios-generic-instructions');
+                    var iosWarning = document.getElementById('ios-safari-warning');
+                    
+                    if (isiOS) {
+                        // Estrazione ed analisi specifica della versione esatta di iOS
+                        var iosVersionMatch = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
+                        var majorVersion = iosVersionMatch ? parseInt(iosVersionMatch[1], 10) : null;
+                        
+                        if (majorVersion) {
+                            badge.innerText = "Dispositivo: iPhone / iPad (iOS " + majorVersion + ")";
+                            
+                            // Adattamento dinamico della guida testuale in base ai mutamenti della UX delle versioni di iOS
+                            if (majorVersion >= 18) {
+                                iosBox.innerHTML = `
+                                    <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Istruzioni specifiche per iOS 18+</p>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-[#0A84FF] flex items-center justify-center text-[11px] font-bold mt-0.5 text-white">1</span>
+                                        <p class="text-xs">Tocca il tasto Condividi di Safari <i class="ph-bold ph-share-network text-[#0A84FF] inline text-base mx-0.5"></i> posto al centro del menu di navigazione inferiore.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                        <p class="text-xs">Scorri verso il basso l'elenco delle azioni rapide (sotto i contatti e le app suggerite) <i class="ph-bold ph-arrow-down inline text-xs text-gray-500"></i>.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">3</span>
+                                        <p class="text-xs">Seleziona con precisione l'opzione <strong class="text-white">"Aggiungi alla schermata Home"</strong> contraddistinta dal simbolo del quadrato con il '+' interno <i class="ph-bold ph-plus-square text-[#0A84FF] inline text-base"></i>.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">4</span>
+                                        <p class="text-xs">Conferma premendo <strong class="text-white">"Aggiungi"</strong> posizionato nell'angolo in alto a destra dello schermo.</p>
+                                    </div>
+                                `;
+                            } else if (majorVersion === 17) {
+                                iosBox.innerHTML = `
+                                    <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Istruzioni specifiche per iOS 17</p>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-[#0A84FF] flex items-center justify-center text-[11px] font-bold mt-0.5 text-white">1</span>
+                                        <p class="text-xs">Premi l'icona Condividi di Safari <i class="ph-bold ph-share-network text-[#0A84FF] inline text-base mx-0.5"></i> situata in basso sulla barra comandi.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                        <p class="text-xs">Scorri il foglio delle azioni verso il basso fino a visualizzare la sezione delle azioni di testo.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">3</span>
+                                        <p class="text-xs">Fai tap sulla voce <strong class="text-white">"Aggiungi alla schermata Home"</strong>.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">4</span>
+                                        <p class="text-xs">In alto a destra, tocca la parola <strong class="text-white">"Aggiungi"</strong>.</p>
+                                    </div>
+                                `;
+                            } else {
+                                badge.innerText = "Dispositivo: iPhone / iPad (iOS " + majorVersion + ")";
+                            }
+                        } else {
+                            badge.innerText = "Dispositivo: iOS (Apple Mobile)";
+                        }
+                        
+                        if(iosBox) iosBox.classList.remove('hidden');
+                        
+                        // Verifica se non siamo su Safari nativo (es. Chrome su iOS, Webview in-app)
+                        var isSafari = /Safari/i.test(ua) && !/CriOS/i.test(ua) && !/FxiOS/i.test(ua) && !/EdgiOS/i.test(ua);
+                        if (!isSafari && iosWarning) {
+                            iosWarning.classList.remove('hidden');
+                        }
+                        
+                    } else if (isAndroid) {
+                        badge.innerText = "Dispositivo: Android Detected";
+                        if(androidBox) androidBox.classList.remove('hidden');
+                    } else {
+                        badge.innerText = "Dispositivo: Personal Computer / Mac";
+                        if(pcBox) pcBox.classList.remove('hidden');
+                    }
+                    
+                    // Gestore dell'evento nativo di installazione PWA per Android e PC Browser
+                    var deferredPrompt;
+                    window.addEventListener('beforeinstallprompt', function(e) {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        
+                        var installBtnAndroid = document.getElementById('pwa-install-btn');
+                        var installBtnPC = document.getElementById('pwa-install-btn-pc');
+                        
+                        var setupButton = function(btn) {
+                            if (btn) {
+                                btn.addEventListener('click', function() {
+                                    deferredPrompt.prompt();
+                                    deferredPrompt.userChoice.then(function(choiceResult) {
+                                        if (choiceResult.outcome === 'accepted') {
+                                            console.log('Utente ha accettato l\'installazione');
+                                        }
+                                        deferredPrompt = null;
+                                    });
+                                });
+                            }
+                        };
+                        
+                        setupButton(installBtnAndroid);
+                        setupButton(installBtnPC);
+                    });
+                });
+            }
+        })();
+    </script>
 </head>
 <body x-data="horizonEcosystem()" class="min-h-screen pb-24 md:pb-6">
 
@@ -295,7 +503,7 @@
                             <template x-if="userData.statoVerifica === 'in_attesa'">
                                 <div>
                                     <p class="text-sm font-bold text-white mb-1">Analisi documentale in corso</p>
-                                    <p class="text-xs text-gray-400 leading-relaxed">Il nostro sistema gestionale sta verificando la corrispondenza dei tuoi documenti. L'identità verrà validata a breve.</p>
+                                    <p class="text-xs text-gray-400 leading-relaxed">Il nostro system gestionale sta verificando la corrispondenza dei tuoi documenti. L'identità verrà validata a breve.</p>
                                 </div>
                             </template>
                             <template x-if="userData.statoVerifica === 'approvato'">
@@ -1033,14 +1241,5 @@
             }));
         });
     </script>
-    <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registrato!'))
-        .catch(err => console.log('Errore Service Worker:', err));
-    });
-  }
-</script>
 </body>
 </html>
