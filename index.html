@@ -542,50 +542,66 @@
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                     <div>
                         <h4 class="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                            <i class="ph-fill ph-clipboard-text text-yellow-500 text-lg"></i> Cronologia Pratiche ERP (/richieste_servizi)
+                            <i class="ph-fill ph-clipboard-text text-yellow-500 text-lg"></i> Le Tue Pratiche ERP
                         </h4>
                         <p class="text-xs text-gray-400">Consulta qui lo stato di avanzamento delle tue richieste al gestionale Horizon.</p>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-white/10 text-gray-400 text-[10px] uppercase tracking-wider font-extrabold">
-                                <th class="pb-3.5 font-bold">Data</th>
-                                <th class="pb-3.5 font-bold">Modulo Servizio</th>
-                                <th class="pb-3.5 font-bold">Tipologia</th>
-                                <th class="pb-3.5 font-bold">ID Pratica</th>
-                                <th class="pb-3.5 font-bold text-right">Stato Sistema</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5 font-medium">
-                            <template x-for="ord in myOrders" :key="ord.id">
-                                <tr class="hover:bg-white/[0.02] transition-colors">
-                                    <td class="py-4 text-gray-400 font-mono-tech whitespace-nowrap" x-text="ord.data || formatDate(ord.dataInvio)"></td>
-                                    <td class="py-4 font-extrabold text-white" x-text="ord.servizio || ord.servizioAcquistato"></td>
-                                    <td class="py-4 text-gray-300 uppercase text-[10px]" x-text="ord.tipo || ord.tipoCliente || 'Privato'"></td>
-                                    <td class="py-4 text-gray-500 font-mono-tech text-[10px]" x-text="ord.id"></td>
-                                    <td class="py-4 text-right whitespace-nowrap">
-                                        <span class="px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wide border"
-                                              :class="{
-                                                 'bg-[#32D74B]/10 text-[#32D74B] border-[#32D74B]/20': ['chiusa', 'approvata', 'convertita in ordine', 'attivo'].includes(normalizzaStato(ord.stato)),
-                                                 'bg-[#FF453A]/10 text-[#FF453A] border-[#FF453A]/20': ['rifiutata', 'annullato'].includes(normalizzaStato(ord.stato)),
-                                                 'bg-[#0A84FF]/10 text-[#0A84FF] border-[#0A84FF]/20': !['chiusa', 'rifiutata', 'convertita in ordine', 'approvata', 'attivo', 'annullato'].includes(normalizzaStato(ord.stato))
-                                              }" x-text="ord.stato || 'raccolta'"></span>
-                                    </td>
-                                </tr>
-                            </template>
-                            <template x-if="myOrders.length === 0">
-                                <tr>
-                                    <td colspan="5" class="py-10 text-center text-gray-500">
-                                        <i class="ph-fill ph-folder-open text-3xl block mb-2 opacity-50"></i>
-                                        Nessuna interazione o pratica tecnica registrata sul gestionale.
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <template x-for="ord in myOrders" :key="ord.id">
+                        <div class="bg-white/[0.03] border border-white/10 rounded-[24px] p-6 flex flex-col justify-between hover:bg-white/[0.05] hover:border-white/20 transition-all relative overflow-hidden group">
+                            
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block" x-text="ord.tipo || ord.tipoCliente || 'Privato'"></span>
+                                    <h4 class="text-base font-extrabold text-white leading-tight" x-text="ord.servizio || ord.servizioAcquistato"></h4>
+                                    <span class="text-[10px] text-gray-500 font-mono-tech mt-1 block">
+                                        ID: <span x-text="ord.id"></span> | <span x-text="ord.data || formatDate(ord.dataInvio)"></span>
+                                    </span>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wide border whitespace-nowrap"
+                                      :class="{
+                                         'bg-[#32D74B]/10 text-[#32D74B] border-[#32D74B]/20': ['chiusa', 'approvata', 'convertita in ordine', 'attivo'].includes(normalizzaStato(ord.stato)),
+                                         'bg-[#FF453A]/10 text-[#FF453A] border-[#FF453A]/20': ['rifiutata', 'annullato'].includes(normalizzaStato(ord.stato)),
+                                         'bg-[#0A84FF]/10 text-[#0A84FF] border-[#0A84FF]/20': !['chiusa', 'rifiutata', 'convertita in ordine', 'approvata', 'attivo', 'annullato'].includes(normalizzaStato(ord.stato))
+                                      }" x-text="ord.stato || 'raccolta'"></span>
+                            </div>
+
+                            <div class="mt-2 p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+                                <template x-if="['rifiutata', 'annullato'].includes(normalizzaStato(ord.stato))">
+                                    <p class="text-[#FF453A] text-[11px] font-bold flex items-center gap-1.5"><i class="ph-fill ph-x-circle text-sm"></i> Pratica annullata o rifiutata dall'ERP.</p>
+                                </template>
+                                
+                                <template x-if="['chiusa', 'approvata', 'convertita in ordine', 'attivo'].includes(normalizzaStato(ord.stato))">
+                                    <p class="text-[#32D74B] text-[11px] font-bold flex items-center gap-1.5"><i class="ph-fill ph-check-circle text-sm"></i> Servizio attivo e regolarmente in produzione.</p>
+                                </template>
+
+                                <template x-if="!['rifiutata', 'annullato', 'chiusa', 'approvata', 'convertita in ordine', 'attivo'].includes(normalizzaStato(ord.stato))">
+                                    <div class="space-y-1.5">
+                                        <div class="flex justify-between text-[9px] text-gray-400 font-bold uppercase">
+                                            <span>In Raccolta</span>
+                                            <span>Lavorazione</span>
+                                            <span>Attivazione</span>
+                                        </div>
+                                        <div class="w-full bg-black/60 rounded-full h-2 overflow-hidden flex shadow-inner border border-white/5">
+                                            <div class="bg-[#0A84FF] h-full transition-all duration-700 ease-out relative" 
+                                                 :style="'width: ' + ((getIndexStato(ord.stato) + 1) / flowStati.length * 100) + '%'">
+                                                 <div class="absolute inset-0 bg-white/20 animate-pulse"></div>     
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="myOrders.length === 0">
+                        <div class="col-span-1 md:col-span-2 py-10 text-center text-gray-500 bg-white/[0.02] border border-white/5 rounded-[24px]">
+                            <i class="ph-fill ph-folder-open text-3xl block mb-2 opacity-50 mx-auto"></i>
+                            <p class="font-medium text-sm">Nessuna interazione o pratica tecnica registrata sul gestionale.</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -1025,7 +1041,6 @@
         document.addEventListener('alpine:init', () => {
             
             // 1. CONFIGURAZIONI FIREBASE INTEGRATE
-            // Database GLS (ERP Gestionale per le Pratiche in /richieste_servizi e transazioni)
             const fbConfigGLS = {
                 apiKey: "AIzaSyBJjhL9-d-2QMKDYviV7KfYhUOHWDAoasU",
                 authDomain: "horizongls.firebaseapp.com",
@@ -1033,7 +1048,6 @@
                 projectId: "horizongls"
             };
 
-            // Database Core ID (Autenticazione, Profilo, KYC, Chat, Saldo AuraCredit)
             const fbConfigID = {
                 apiKey: "AIzaSyD8_itwMJwjLSftJaFJ6ztQN-B6WSBORoo",
                 authDomain: "horizon-id-core.firebaseapp.com",
@@ -1069,7 +1083,6 @@
                 otpInterval: null,
                 paypalInitialized: false,
 
-                // Configurazione Modali
                 orderModal: { open: false, service: null },
                 orderForm: { tipoCliente: 'Privato', note: '', podLuce: '', podAcqua: '', pdrGas: '', indirizzo: '', dominio: '' },
                 rechargeModal: { open: false, amount: 50 },
@@ -1083,7 +1096,6 @@
                     { id: 'enterprise', name: 'Enterprise / Custom' }
                 ],
                 
-                // ARCHIVIO COMPLETISSIMO DEI SERVIZI
                 availableServices: [
                     { id: 'orion-fwa-priv', title: 'Orion FWA Privato', category: 'privati', type: 'Connettività', priceText: '€ 35.00 / mese', setupText: 'Installazione Inclusa', reqFields: ['indirizzo'], bgColor: 'bg-blue-500/10 text-blue-400', icon: 'ph-wifi-high', description: 'Connettività internet a banda ultralarga via ponti radio FWA ad alta frequenza per abitazioni private.' },
                     { id: 'orion-sat-priv', title: 'Orion SAT Privato', category: 'privati', type: 'Connettività Satellitare', priceText: '€ 45.00 / mese', setupText: '+ € 38,90 Tantum Parabola', reqFields: ['indirizzo'], bgColor: 'bg-cyan-500/10 text-cyan-400', icon: 'ph-planet', description: 'Copertura satellitare costellare ad altissima affidabilità, 100% indipendente dalle centraline terrestri.' },
@@ -1105,10 +1117,8 @@
                     { id: 'master-all-inclusive', title: 'Master All-Inclusive (Enterprise + iORE)', category: 'enterprise', type: 'Soluzione Definitiva', priceText: '€ 890.00 / mese', setupText: 'Valore reale: € 1.339/mese', reqFields: ['pod', 'indirizzo', 'dominio'], bgColor: 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-300', icon: 'ph-crown', badge: 'Master Pack', badgeColor: 'bg-gradient-to-r from-cyan-500 to-blue-500', description: 'L\'apice tecnologico di Horizon. Tutto il piano Enterprise unito alle forniture idriche, gas ed elettriche flat illimitate.' }
                 ],
                 
-                // FLUSSO DEGLI STATI GESTIONALE PER PROGRESS BAR
                 flowStati: ['raccolta', 'in corso', 'presa in carico', 'in contatto', 'preventivo inviato', 'approvata', 'convertita in ordine', 'attivo'],
 
-                // FUNZIONE CAMBIO SCHEDA
                 switchTab(tab) {
                     this.appTab = tab;
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1138,7 +1148,6 @@
                         try {
                             this.user = usr;
                             if (usr) {
-                                // 1. Ascolto profilo utente su Firebase Core ID
                                 dbID.ref(`users/${usr.uid}`).on('value', (snap) => {
                                     if (snap.exists()) {
                                         this.userData = snap.val();
@@ -1148,7 +1157,6 @@
                                     }
                                 });
 
-                                // 2. Ascolto Chat Supporto
                                 dbID.ref(`chats/${usr.uid}`).on('value', (snap) => {
                                     const list = [];
                                     snap.forEach((child) => {
@@ -1158,7 +1166,6 @@
                                     this.autoScrollChat();
                                 });
 
-                                // 3. Ascolto Log Accessi
                                 dbID.ref(`access_logs/${usr.uid}`).on('value', (snap) => {
                                     const logs = [];
                                     snap.forEach((child) => {
@@ -1167,7 +1174,6 @@
                                     this.accessLogs = logs.reverse();
                                 });
 
-                                // 4. LETTURA PRATICHE DAL NODO GESTIONALE GLS
                                 dbGLS.ref('richieste_servizi').orderByChild('email').equalTo(usr.email).on('value', (snap) => {
                                     const ords = [];
                                     snap.forEach((child) => {
@@ -1184,7 +1190,6 @@
                                     this.myOrders = ords.reverse();
                                 });
 
-                                // 5. LETTURA MOVIMENTI CONTABILI E FATTURE
                                 dbGLS.ref(`transazioni/${usr.uid}`).on('value', (snap) => {
                                     const txs = [];
                                     snap.forEach((child) => {
@@ -1195,7 +1200,6 @@
 
                                 this.startRollingOTP();
                                 
-                                // Registrazione Log Accesso (il try-catch assorbe qui senza allarmare l'utente)
                                 try {
                                     await dbID.ref(`access_logs/${usr.uid}`).push({
                                         timestamp: Date.now(),
@@ -1216,7 +1220,6 @@
                             }
                         } catch (e) {
                             console.error("Errore critico in fase di auth:", e);
-                            // Rimosso il banner errore per evitare falsi positivi fastidiosi
                         } finally {
                             this.hideLoader();
                         }
@@ -1365,7 +1368,7 @@
                         
                         this.orderModal.open = false;
                         this.showToast("Pratica depositata con successo!");
-                        this.switchTab('orders'); // Ora reindirizza direttamente alla sezione ordini!
+                        this.switchTab('orders'); 
                     } catch (err) {
                         this.showToast("Errore di trasmissione verso GLS: " + err.message, 'error');
                     } finally {
@@ -1373,10 +1376,8 @@
                     }
                 },
 
-                // LOGICA PAYPAL SMART BUTTONS
                 openRechargeModal() {
                     this.rechargeModal.open = true;
-                    // Aspetta il render del DOM prima di inizializzare PayPal, evita crash di comunicazione
                     this.$nextTick(() => {
                         this.initPayPal();
                     });
@@ -1387,7 +1388,7 @@
                     const container = document.getElementById('paypal-button-container');
                     if (!container) return;
                     
-                    container.innerHTML = ''; // Assicura che sia pulito
+                    container.innerHTML = ''; 
                     
                     paypal.Buttons({
                         style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
@@ -1397,9 +1398,13 @@
                                 this.showToast('L\'importo minimo di ricarica è di 5.00 €.', 'error');
                                 return;
                             }
+                            // Aggiunto "currency_code: EUR" esplicito per prevenire l'errore gateway
                             return actions.order.create({
                                 purchase_units: [{
-                                    amount: { value: currentAmount.toFixed(2) },
+                                    amount: { 
+                                        currency_code: "EUR",
+                                        value: currentAmount.toFixed(2) 
+                                    },
                                     description: `Ricarica Conto AuraCredit - ID: ${this.user.uid}`
                                 }]
                             });
@@ -1410,12 +1415,10 @@
                                 try {
                                     const amountPaid = parseFloat(details.purchase_units[0].amount.value);
                                     
-                                    // Aggiornamento saldo
                                     const currentCredit = parseFloat(this.userData.auraCredit || 0);
                                     const newCredit = currentCredit + amountPaid;
                                     await dbID.ref(`users/${this.user.uid}`).update({ auraCredit: newCredit });
 
-                                    // Registrazione movimento
                                     await dbGLS.ref(`transazioni/${this.user.uid}`).push({
                                         uid: this.user.uid,
                                         nome: this.userData.nome || 'Utente Horizon',
