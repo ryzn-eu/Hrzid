@@ -13,6 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
+    
     <script src="https://www.paypal.com/sdk/js?client-id=BAACezowBjOYky8Hx-SGK2qm70d-Mls3KBP0h-WoxC9mw6Lq-7KnlMYuiqKc9fhEqFAL1kYWP_GAct2bXk&disable-funding=venmo&currency=EUR"></script>
 
     <style>
@@ -60,6 +61,7 @@
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        html { scroll-behavior: smooth; }
     </style>
     
     <script>
@@ -450,23 +452,28 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <button @click="appTab = 'services'" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-[#0A84FF]/50 transition-all text-left flex flex-col justify-between h-32 group">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <button @click="switchTab('services')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-[#0A84FF]/50 transition-all text-left flex flex-col justify-between h-32 group">
                     <div class="w-10 h-10 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] text-xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-squares-four"></i></div>
                     <div><h4 class="text-xs font-extrabold text-white">Catalogo ERP</h4><p class="text-[10px] text-gray-400 mt-0.5">Attiva nuovi moduli</p></div>
                 </button>
+                
+                <button @click="switchTab('orders')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-yellow-500/50 transition-all text-left flex flex-col justify-between h-32 group">
+                    <div class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 text-xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-clipboard-text"></i></div>
+                    <div><h4 class="text-xs font-extrabold text-white">I Miei Ordini</h4><p class="text-[10px] text-gray-400 mt-0.5">Stato pratiche attive</p></div>
+                </button>
 
-                <button @click="appTab = 'wallet'" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-[#32D74B]/50 transition-all text-left flex flex-col justify-between h-32 group">
+                <button @click="switchTab('wallet')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-[#32D74B]/50 transition-all text-left flex flex-col justify-between h-32 group">
                     <div class="w-10 h-10 rounded-xl bg-[#32D74B]/10 flex items-center justify-center text-[#32D74B] text-xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-wallet"></i></div>
                     <div><h4 class="text-xs font-extrabold text-white">Conto & Fatture</h4><p class="text-[10px] text-gray-400 mt-0.5">Gestisci AuraCredit</p></div>
                 </button>
 
-                <button @click="appTab = 'id-card'" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-purple-500/50 transition-all text-left flex flex-col justify-between h-32 group">
+                <button @click="switchTab('id-card')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-purple-500/50 transition-all text-left flex flex-col justify-between h-32 group">
                     <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 text-xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-identification-card"></i></div>
                     <div><h4 class="text-xs font-extrabold text-white">Digital Pass</h4><p class="text-[10px] text-gray-400 mt-0.5">Badge e QR Code</p></div>
                 </button>
 
-                <button @click="appTab = 'chat'" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-orange-500/50 transition-all text-left flex flex-col justify-between h-32 group">
+                <button @click="switchTab('chat')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-orange-500/50 transition-all text-left flex flex-col justify-between h-32 group col-span-2 sm:col-span-1">
                     <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 text-xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-headset"></i></div>
                     <div><h4 class="text-xs font-extrabold text-white">Assistenza</h4><p class="text-[10px] text-gray-400 mt-0.5">Chat diretta staff</p></div>
                 </button>
@@ -526,6 +533,59 @@
                             <span class="text-xs font-bold text-gray-300">Permanente</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="appTab === 'orders'" class="space-y-6" x-transition>
+            <div class="glass-panel p-6 rounded-[28px] border border-white/10">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
+                    <div>
+                        <h4 class="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                            <i class="ph-fill ph-clipboard-text text-yellow-500 text-lg"></i> Cronologia Pratiche ERP (/richieste_servizi)
+                        </h4>
+                        <p class="text-xs text-gray-400">Consulta qui lo stato di avanzamento delle tue richieste al gestionale Horizon.</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-white/10 text-gray-400 text-[10px] uppercase tracking-wider font-extrabold">
+                                <th class="pb-3.5 font-bold">Data</th>
+                                <th class="pb-3.5 font-bold">Modulo Servizio</th>
+                                <th class="pb-3.5 font-bold">Tipologia</th>
+                                <th class="pb-3.5 font-bold">ID Pratica</th>
+                                <th class="pb-3.5 font-bold text-right">Stato Sistema</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 font-medium">
+                            <template x-for="ord in myOrders" :key="ord.id">
+                                <tr class="hover:bg-white/[0.02] transition-colors">
+                                    <td class="py-4 text-gray-400 font-mono-tech whitespace-nowrap" x-text="ord.data || formatDate(ord.dataInvio)"></td>
+                                    <td class="py-4 font-extrabold text-white" x-text="ord.servizio || ord.servizioAcquistato"></td>
+                                    <td class="py-4 text-gray-300 uppercase text-[10px]" x-text="ord.tipo || ord.tipoCliente || 'Privato'"></td>
+                                    <td class="py-4 text-gray-500 font-mono-tech text-[10px]" x-text="ord.id"></td>
+                                    <td class="py-4 text-right whitespace-nowrap">
+                                        <span class="px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wide border"
+                                              :class="{
+                                                 'bg-[#32D74B]/10 text-[#32D74B] border-[#32D74B]/20': ['chiusa', 'approvata', 'convertita in ordine', 'attivo'].includes(normalizzaStato(ord.stato)),
+                                                 'bg-[#FF453A]/10 text-[#FF453A] border-[#FF453A]/20': ['rifiutata', 'annullato'].includes(normalizzaStato(ord.stato)),
+                                                 'bg-[#0A84FF]/10 text-[#0A84FF] border-[#0A84FF]/20': !['chiusa', 'rifiutata', 'convertita in ordine', 'approvata', 'attivo', 'annullato'].includes(normalizzaStato(ord.stato))
+                                              }" x-text="ord.stato || 'raccolta'"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-if="myOrders.length === 0">
+                                <tr>
+                                    <td colspan="5" class="py-10 text-center text-gray-500">
+                                        <i class="ph-fill ph-folder-open text-3xl block mb-2 opacity-50"></i>
+                                        Nessuna interazione o pratica tecnica registrata sul gestionale.
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -707,55 +767,6 @@
                             </div>
                         </div>
                     </template>
-                </div>
-            </div>
-
-            <div class="glass-panel p-6 rounded-[28px] border border-white/10">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
-                    <div>
-                        <h4 class="text-sm font-extrabold text-white uppercase tracking-wider">Cronologia Pratiche ERP (/richieste_servizi)</h4>
-                        <p class="text-xs text-gray-400">Le richieste vengono lette direttamente dal nodo centrale dove opera il gestionale.</p>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-white/10 text-gray-400 text-[10px] uppercase tracking-wider font-extrabold">
-                                <th class="pb-3.5 font-bold">Data</th>
-                                <th class="pb-3.5 font-bold">Modulo Servizio</th>
-                                <th class="pb-3.5 font-bold">Tipologia</th>
-                                <th class="pb-3.5 font-bold">ID Pratica</th>
-                                <th class="pb-3.5 font-bold text-right">Stato Sistema</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5 font-medium">
-                            <template x-for="ord in myOrders" :key="ord.id">
-                                <tr class="hover:bg-white/[0.02] transition-colors">
-                                    <td class="py-4 text-gray-400 font-mono-tech whitespace-nowrap" x-text="ord.data || formatDate(ord.dataInvio)"></td>
-                                    <td class="py-4 font-extrabold text-white" x-text="ord.servizio || ord.servizioAcquistato"></td>
-                                    <td class="py-4 text-gray-300 uppercase text-[10px]" x-text="ord.tipo || ord.tipoCliente || 'Privato'"></td>
-                                    <td class="py-4 text-gray-500 font-mono-tech text-[10px]" x-text="ord.id"></td>
-                                    <td class="py-4 text-right whitespace-nowrap">
-                                        <span class="px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wide border"
-                                              :class="{
-                                                 'bg-[#32D74B]/10 text-[#32D74B] border-[#32D74B]/20': ['chiusa', 'approvata', 'convertita in ordine', 'attivo'].includes(normalizzaStato(ord.stato)),
-                                                 'bg-[#FF453A]/10 text-[#FF453A] border-[#FF453A]/20': ['rifiutata', 'annullato'].includes(normalizzaStato(ord.stato)),
-                                                 'bg-[#0A84FF]/10 text-[#0A84FF] border-[#0A84FF]/20': !['chiusa', 'rifiutata', 'convertita in ordine', 'approvata', 'attivo', 'annullato'].includes(normalizzaStato(ord.stato))
-                                              }" x-text="ord.stato || 'raccolta'"></span>
-                                    </td>
-                                </tr>
-                            </template>
-                            <template x-if="myOrders.length === 0">
-                                <tr>
-                                    <td colspan="5" class="py-10 text-center text-gray-500">
-                                        <i class="ph-fill ph-folder-open text-3xl block mb-2 opacity-50"></i>
-                                        Nessuna interazione o pratica tecnica registrata sul gestionale.
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
@@ -962,45 +973,48 @@
         </div>
 
         <nav class="fixed bottom-0 left-0 right-0 z-[7000] bg-[rgba(20,20,22,0.85)] backdrop-blur-2xl border-t border-white/10 pb-7 pt-3 px-4 flex items-center justify-around md:hidden">
-            <button @click="appTab = 'dashboard'" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'dashboard' ? 'text-[#0A84FF]' : 'text-gray-500'">
+            <button @click="switchTab('dashboard')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'dashboard' ? 'text-[#0A84FF]' : 'text-gray-500'">
                 <i class="text-2xl" :class="appTab === 'dashboard' ? 'ph-fill ph-squares-four' : 'ph ph-squares-four'"></i>
                 <span class="text-[9px] font-bold tracking-wide">Home</span>
             </button>
-            <button @click="appTab = 'wallet'" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'wallet' ? 'text-[#32D74B]' : 'text-gray-500'">
+            <button @click="switchTab('wallet')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'wallet' ? 'text-[#32D74B]' : 'text-gray-500'">
                 <i class="text-2xl" :class="appTab === 'wallet' ? 'ph-fill ph-wallet' : 'ph ph-wallet'"></i>
                 <span class="text-[9px] font-bold tracking-wide">Wallet</span>
             </button>
-            <button @click="appTab = 'services'" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'services' ? 'text-[#0A84FF]' : 'text-gray-500'">
+            <button @click="switchTab('services')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'services' ? 'text-[#0A84FF]' : 'text-gray-500'">
                 <i class="text-2xl" :class="appTab === 'services' ? 'ph-fill ph-cube' : 'ph ph-cube'"></i>
                 <span class="text-[9px] font-bold tracking-wide">Moduli</span>
             </button>
-            <button @click="appTab = 'id-card'" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'id-card' ? 'text-purple-400' : 'text-gray-500'">
-                <i class="text-2xl" :class="appTab === 'id-card' ? 'ph-fill ph-identification-card' : 'ph ph-identification-card'"></i>
-                <span class="text-[9px] font-bold tracking-wide">Pass</span>
+            <button @click="switchTab('orders')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'orders' ? 'text-yellow-400' : 'text-gray-500'">
+                <i class="text-2xl" :class="appTab === 'orders' ? 'ph-fill ph-clipboard-text' : 'ph ph-clipboard-text'"></i>
+                <span class="text-[9px] font-bold tracking-wide">Ordini</span>
             </button>
-            <button @click="appTab = 'chat'" class="flex flex-col items-center gap-1 transition-colors w-14 relative" :class="appTab === 'chat' ? 'text-orange-400' : 'text-gray-500'">
+            <button @click="switchTab('chat')" class="flex flex-col items-center gap-1 transition-colors w-14 relative" :class="appTab === 'chat' ? 'text-orange-400' : 'text-gray-500'">
                 <i class="text-2xl" :class="appTab === 'chat' ? 'ph-fill ph-chat-circle-text' : 'ph ph-chat-circle-text'"></i>
                 <span class="text-[9px] font-bold tracking-wide">Supporto</span>
             </button>
         </nav>
 
-        <div class="hidden md:flex items-center gap-2 mt-8 bg-white/5 border border-white/10 p-2 rounded-full w-max mx-auto shadow-2xl">
-            <button @click="appTab = 'dashboard'" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'dashboard' ? 'bg-[#0A84FF] text-white shadow-md' : 'text-gray-400 hover:text-white'">
+        <div class="hidden md:flex items-center gap-2 mt-8 bg-white/5 border border-white/10 p-2 rounded-full w-max mx-auto shadow-2xl flex-wrap justify-center">
+            <button @click="switchTab('dashboard')" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'dashboard' ? 'bg-[#0A84FF] text-white shadow-md' : 'text-gray-400 hover:text-white'">
                 Dashboard
             </button>
-            <button @click="appTab = 'wallet'" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'wallet' ? 'bg-[#32D74B] text-black shadow-md' : 'text-gray-400 hover:text-white'">
+            <button @click="switchTab('orders')" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'orders' ? 'bg-yellow-500 text-black shadow-md' : 'text-gray-400 hover:text-white'">
+                I Miei Ordini
+            </button>
+            <button @click="switchTab('wallet')" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'wallet' ? 'bg-[#32D74B] text-black shadow-md' : 'text-gray-400 hover:text-white'">
                 Wallet & Fatture
             </button>
-            <button @click="appTab = 'services'" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'services' ? 'bg-[#0A84FF] text-white shadow-md' : 'text-gray-400 hover:text-white'">
+            <button @click="switchTab('services')" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'services' ? 'bg-[#0A84FF] text-white shadow-md' : 'text-gray-400 hover:text-white'">
                 Catalogo ERP
             </button>
-            <button @click="appTab = 'id-card'" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'id-card' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-white'">
+            <button @click="switchTab('id-card')" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'id-card' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-white'">
                 Digital Pass
             </button>
-            <button @click="appTab = 'chat'" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'chat' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-400 hover:text-white'">
+            <button @click="switchTab('chat')" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'chat' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-400 hover:text-white'">
                 Chat Supporto
             </button>
-            <button @click="appTab = 'security'" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'security' ? 'bg-white/20 text-white shadow-md' : 'text-gray-400 hover:text-white'">
+            <button @click="switchTab('security')" class="px-5 py-2.5 rounded-full text-xs font-bold transition-all" :class="appTab === 'security' ? 'bg-white/20 text-white shadow-md' : 'text-gray-400 hover:text-white'">
                 Sicurezza & Log
             </button>
         </div>
@@ -1069,124 +1083,36 @@
                     { id: 'enterprise', name: 'Enterprise / Custom' }
                 ],
                 
-                // ARCHIVIO COMPLETISSIMO DEI SERVIZI (TUTTI QUEL DI SITO CON SERVIZI + HORIZON ID)
+                // ARCHIVIO COMPLETISSIMO DEI SERVIZI
                 availableServices: [
-                    // --- PRIVATI & UTILITIES ---
-                    { 
-                        id: 'orion-fwa-priv', title: 'Orion FWA Privato', category: 'privati', type: 'Connettività', 
-                        priceText: '€ 35.00 / mese', setupText: 'Installazione Inclusa', reqFields: ['indirizzo'], 
-                        bgColor: 'bg-blue-500/10 text-blue-400', icon: 'ph-wifi-high', 
-                        description: 'Connettività internet a banda ultralarga via ponti radio FWA ad alta frequenza per abitazioni private.'
-                    },
-                    { 
-                        id: 'orion-sat-priv', title: 'Orion SAT Privato', category: 'privati', type: 'Connettività Satellitare', 
-                        priceText: '€ 45.00 / mese', setupText: '+ € 38,90 Tantum Parabola', reqFields: ['indirizzo'], 
-                        bgColor: 'bg-cyan-500/10 text-cyan-400', icon: 'ph-planet', 
-                        description: 'Copertura satellitare costellare ad altissima affidabilità, 100% indipendente dalle centraline terrestri.'
-                    },
-                    { 
-                        id: 'iore-luce-gas', title: 'iORE Green Luce & Gas', category: 'privati', type: 'Utilities Energia', 
-                        priceText: 'Tariffa Flat Personalizzata', setupText: 'Zero Costi di Attivazione', reqFields: ['pod'], 
-                        bgColor: 'bg-emerald-500/10 text-emerald-400', icon: 'ph-lightning', badge: 'Green 100%', badgeColor: 'bg-emerald-600',
-                        description: 'Fornitura domestica integrata con stabilità tariffaria slegata dalle fluttuazioni delle borse elettriche.'
-                    },
-                    { 
-                        id: 'global-aura-stream', title: 'Global Aura Music Piattaforma', category: 'privati', type: 'Streaming & Social', 
-                        priceText: '€ 9.99 / mese', setupText: 'Attivazione Istantanea', reqFields: [], 
-                        bgColor: 'bg-pink-500/10 text-pink-400', icon: 'ph-music-notes', 
-                        description: 'Accesso premium al network di streaming musicale audio ad alta fedeltà e interazione social di nuova generazione.'
-                    },
-                    // --- PMI & WEB CLOUD ---
-                    { 
-                        id: 'web-cloud-pmi', title: 'Sito Web Vetrina + Cloud Horizon', category: 'pmi', type: 'Web & Hosting', 
-                        priceText: '€ 66.00 / mese', setupText: '+ € 100 Tantum Iniziale', reqFields: ['dominio'], 
-                        bgColor: 'bg-blue-600/10 text-blue-400', icon: 'ph-desktop', 
-                        description: 'Realizzazione sito web aziendale SEO ready configurato all\'interno dell\'hosting cloud proprietario Net-Orion.'
-                    },
-                    { 
-                        id: 'web-app-pwa', title: 'Sito Custom + App Mobile PWA', category: 'pmi', type: 'Sviluppo Software', 
-                        priceText: '€ 78.00 / mese', setupText: '+ € 180 Tantum Iniziale', reqFields: ['dominio'], 
-                        bgColor: 'bg-purple-500/10 text-purple-400', icon: 'ph-device-mobile', badge: 'Sponsorizzato', badgeColor: 'bg-purple-600',
-                        description: 'Progressive Web App installabile per la fidelizzazione dei clienti, gestione ordini e invio notifiche push commerciali.'
-                    },
-                    { 
-                        id: 'starter-20', title: 'Starter 2.0 (ERP Dev.Ryzn Base)', category: 'pmi', type: 'Software Suite', 
-                        priceText: '€ 139.00 / mese', setupText: 'Fino a 5 Utenti Aziendali', reqFields: [], 
-                        bgColor: 'bg-indigo-500/10 text-indigo-400', icon: 'ph-app-window', 
-                        description: 'Il pacchetto essenziale per piccole imprese che vogliono digitalizzarsi. Include ERP Base, Sito Vetrina e App Timbrature.'
-                    },
-                    { 
-                        id: 'social-base', title: 'Gestione Social Base', category: 'pmi', type: 'Marketing Digitale', 
-                        priceText: '€ 150.00 / mese', setupText: '2 Contenuti Settimanali', reqFields: [], 
-                        bgColor: 'bg-orange-500/10 text-orange-400', icon: 'ph-share-network', 
-                        description: 'Piano editoriale e cura professionale dei canali social aziendali per aumentare la brand awareness territoriale.'
-                    },
-                    { 
-                        id: 'seo-ottim', title: 'Posizionamento SEO Pro', category: 'pmi', type: 'Marketing Digitale', 
-                        priceText: '€ 250.00 / mese', setupText: 'Analisi Competitiva Inclusa', reqFields: ['dominio'], 
-                        bgColor: 'bg-yellow-500/10 text-yellow-400', icon: 'ph-chart-line-up', 
-                        description: 'Indicizzazione e ottimizzazione strutturale on-page e off-page per dominare i risultati di ricerca su Google.'
-                    },
-                    // --- AZIENDE & BUSINESS ---
-                    { 
-                        id: 'orion-fwa-bus', title: 'Orion FWA Business', category: 'aziende', type: 'Connettività Aziendale', 
-                        priceText: '€ 68.00 / mese', setupText: 'Banda Simmetrica Garantita', reqFields: ['indirizzo'], 
-                        bgColor: 'bg-blue-500/10 text-blue-500', icon: 'ph-cell-tower', 
-                        description: 'Rete wireless aziendale ad altissime prestazioni con priorità assoluta di pacchetto e monitoraggio SLA h24.'
-                    },
-                    { 
-                        id: 'orion-sat-business', title: 'Orion SAT Business (2 Parabole)', category: 'aziende', type: 'Connettività Ridondata', 
-                        priceText: '€ 68.00 / mese', setupText: '+ € 78 Tantum (2 Parabole)', reqFields: ['indirizzo'], 
-                        bgColor: 'bg-orange-500/10 text-orange-400', icon: 'ph-broadcast', badge: 'Ridondanza 100%', badgeColor: 'bg-orange-600',
-                        description: 'Connettività con duplice parabola ad aggancio automatico satellitare in caso di down della linea principale.'
-                    },
-                    { 
-                        id: 'professional-plan', title: 'Professional Plan ERP + Rete', category: 'aziende', type: 'Ecosistema Integrato', 
-                        priceText: '€ 279.00 / mese', setupText: 'Fino a 25 Utenti + Antenna', reqFields: ['indirizzo', 'dominio'], 
-                        bgColor: 'bg-emerald-500/10 text-emerald-400', icon: 'ph-buildings', badge: 'Più Richiesto', badgeColor: 'bg-emerald-600',
-                        description: 'L\'ecosistema completo per PMI strutturate. Include ERP Dev.Ryzn, E-Commerce, Rete Radiotrasmissione Veo3 e HR.'
-                    },
-                    { 
-                        id: 'social-pro', title: 'Gestione Social Professional Ads', category: 'aziende', type: 'Marketing & Ads', 
-                        priceText: '€ 350.00 / mese', setupText: '4 Post/Settimana + Campagne', reqFields: [], 
-                        bgColor: 'bg-red-500/10 text-red-400', icon: 'ph-megaphone', 
-                        description: 'Campagne pubblicitarie avanzate, monitoraggio conversioni e gestione completa della comunicazione aziendale.'
-                    },
-                    // --- ENTERPRISE / CUSTOM ---
-                    { 
-                        id: 'veo3-radio', title: 'Radiotrasmissione Dedicata Veo3', category: 'enterprise', type: 'Hardware Privato (L1-L2)', 
-                        priceText: 'Contratto SLA Custom', setupText: 'VPN Hardware AES-256', reqFields: ['indirizzo'], 
-                        bgColor: 'bg-indigo-500/10 text-indigo-400', icon: 'ph-radio', 
-                        description: 'Ponte radio privato con antenna parabolica proprietaria fino a 1.8 Gbps per azzerare la latenza e i guasti stradali.'
-                    },
-                    { 
-                        id: 'enterprise-plan', title: 'Enterprise Plan (Utenti Illimitati)', category: 'enterprise', type: 'Software & Server Dedicato', 
-                        priceText: '€ 559.00 / mese', setupText: 'Server Net-Orion Dedicato', reqFields: ['indirizzo'], 
-                        bgColor: 'bg-purple-500/10 text-purple-400', icon: 'ph-cpu', 
-                        description: 'Per grandi volumi di dati e multinazionali. Cluster NVMe proprietario, triplice backup ogni 4 ore e SLA 99.99%.'
-                    },
-                    { 
-                        id: 'erp-dev-ryzn', title: 'ERP Dev.Ryzn & Net-Orion Cloud', category: 'enterprise', type: 'Software Suite Custom', 
-                        priceText: 'Preventivo su Cluster NVMe', setupText: 'Sviluppo Moduli Custom', reqFields: [], 
-                        bgColor: 'bg-cyan-600/10 text-cyan-400', icon: 'ph-database', 
-                        description: 'Gestione risorse umane, totem presenze fisici NFC/QR, magazzino avanzato e fatturazione elettronica SDI nativa.'
-                    },
-                    { 
-                        id: 'iore-enterprise', title: 'iORE Utilities IT Integrate Corporate', category: 'enterprise', type: 'Utilities & Telemetria', 
-                        priceText: 'Tariffazione All-Inclusive', setupText: 'Accorpamento Energetico', reqFields: ['pod', 'indirizzo'], 
-                        bgColor: 'bg-emerald-600/10 text-emerald-400', icon: 'ph-chart-pie-slice', 
-                        description: 'Accorpamento flussi energetici elettrici/gas e telemetria diretta dei consumi IT all\'interno dell\'ERP aziendale.'
-                    },
-                    { 
-                        id: 'master-all-inclusive', title: 'Master All-Inclusive (Enterprise + iORE)', category: 'enterprise', type: 'Soluzione Definitiva', 
-                        priceText: '€ 890.00 / mese', setupText: 'Valore reale: € 1.339/mese', reqFields: ['pod', 'indirizzo', 'dominio'], 
-                        bgColor: 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-300', icon: 'ph-crown', badge: 'Master Pack', badgeColor: 'bg-gradient-to-r from-cyan-500 to-blue-500',
-                        description: 'L\'apice tecnologico di Horizon. Tutto il piano Enterprise unito alle forniture idriche, gas ed elettriche flat illimitate.'
-                    }
+                    { id: 'orion-fwa-priv', title: 'Orion FWA Privato', category: 'privati', type: 'Connettività', priceText: '€ 35.00 / mese', setupText: 'Installazione Inclusa', reqFields: ['indirizzo'], bgColor: 'bg-blue-500/10 text-blue-400', icon: 'ph-wifi-high', description: 'Connettività internet a banda ultralarga via ponti radio FWA ad alta frequenza per abitazioni private.' },
+                    { id: 'orion-sat-priv', title: 'Orion SAT Privato', category: 'privati', type: 'Connettività Satellitare', priceText: '€ 45.00 / mese', setupText: '+ € 38,90 Tantum Parabola', reqFields: ['indirizzo'], bgColor: 'bg-cyan-500/10 text-cyan-400', icon: 'ph-planet', description: 'Copertura satellitare costellare ad altissima affidabilità, 100% indipendente dalle centraline terrestri.' },
+                    { id: 'iore-luce-gas', title: 'iORE Green Luce & Gas', category: 'privati', type: 'Utilities Energia', priceText: 'Tariffa Flat Personalizzata', setupText: 'Zero Costi di Attivazione', reqFields: ['pod'], bgColor: 'bg-emerald-500/10 text-emerald-400', icon: 'ph-lightning', badge: 'Green 100%', badgeColor: 'bg-emerald-600', description: 'Fornitura domestica integrata con stabilità tariffaria slegata dalle fluttuazioni delle borse elettriche.' },
+                    { id: 'global-aura-stream', title: 'Global Aura Music Piattaforma', category: 'privati', type: 'Streaming & Social', priceText: '€ 9.99 / mese', setupText: 'Attivazione Istantanea', reqFields: [], bgColor: 'bg-pink-500/10 text-pink-400', icon: 'ph-music-notes', description: 'Accesso premium al network di streaming musicale audio ad alta fedeltà e interazione social di nuova generazione.' },
+                    { id: 'web-cloud-pmi', title: 'Sito Web Vetrina + Cloud Horizon', category: 'pmi', type: 'Web & Hosting', priceText: '€ 66.00 / mese', setupText: '+ € 100 Tantum Iniziale', reqFields: ['dominio'], bgColor: 'bg-blue-600/10 text-blue-400', icon: 'ph-desktop', description: 'Realizzazione sito web aziendale SEO ready configurato all\'interno dell\'hosting cloud proprietario Net-Orion.' },
+                    { id: 'web-app-pwa', title: 'Sito Custom + App Mobile PWA', category: 'pmi', type: 'Sviluppo Software', priceText: '€ 78.00 / mese', setupText: '+ € 180 Tantum Iniziale', reqFields: ['dominio'], bgColor: 'bg-purple-500/10 text-purple-400', icon: 'ph-device-mobile', badge: 'Sponsorizzato', badgeColor: 'bg-purple-600', description: 'Progressive Web App installabile per la fidelizzazione dei clienti, gestione ordini e invio notifiche push commerciali.' },
+                    { id: 'starter-20', title: 'Starter 2.0 (ERP Dev.Ryzn Base)', category: 'pmi', type: 'Software Suite', priceText: '€ 139.00 / mese', setupText: 'Fino a 5 Utenti Aziendali', reqFields: [], bgColor: 'bg-indigo-500/10 text-indigo-400', icon: 'ph-app-window', description: 'Il pacchetto essenziale per piccole imprese che vogliono digitalizzarsi. Include ERP Base, Sito Vetrina e App Timbrature.' },
+                    { id: 'social-base', title: 'Gestione Social Base', category: 'pmi', type: 'Marketing Digitale', priceText: '€ 150.00 / mese', setupText: '2 Contenuti Settimanali', reqFields: [], bgColor: 'bg-orange-500/10 text-orange-400', icon: 'ph-share-network', description: 'Piano editoriale e cura professionale dei canali social aziendali per aumentare la brand awareness territoriale.' },
+                    { id: 'seo-ottim', title: 'Posizionamento SEO Pro', category: 'pmi', type: 'Marketing Digitale', priceText: '€ 250.00 / mese', setupText: 'Analisi Competitiva Inclusa', reqFields: ['dominio'], bgColor: 'bg-yellow-500/10 text-yellow-400', icon: 'ph-chart-line-up', description: 'Indicizzazione e ottimizzazione strutturale on-page e off-page per dominare i risultati di ricerca su Google.' },
+                    { id: 'orion-fwa-bus', title: 'Orion FWA Business', category: 'aziende', type: 'Connettività Aziendale', priceText: '€ 68.00 / mese', setupText: 'Banda Simmetrica Garantita', reqFields: ['indirizzo'], bgColor: 'bg-blue-500/10 text-blue-500', icon: 'ph-cell-tower', description: 'Rete wireless aziendale ad altissime prestazioni con priorità assoluta di pacchetto e monitoraggio SLA h24.' },
+                    { id: 'orion-sat-business', title: 'Orion SAT Business (2 Parabole)', category: 'aziende', type: 'Connettività Ridondata', priceText: '€ 68.00 / mese', setupText: '+ € 78 Tantum (2 Parabole)', reqFields: ['indirizzo'], bgColor: 'bg-orange-500/10 text-orange-400', icon: 'ph-broadcast', badge: 'Ridondanza 100%', badgeColor: 'bg-orange-600', description: 'Connettività con duplice parabola ad aggancio automatico satellitare in caso di down della linea principale.' },
+                    { id: 'professional-plan', title: 'Professional Plan ERP + Rete', category: 'aziende', type: 'Ecosistema Integrato', priceText: '€ 279.00 / mese', setupText: 'Fino a 25 Utenti + Antenna', reqFields: ['indirizzo', 'dominio'], bgColor: 'bg-emerald-500/10 text-emerald-400', icon: 'ph-buildings', badge: 'Più Richiesto', badgeColor: 'bg-emerald-600', description: 'L\'ecosistema completo per PMI strutturate. Include ERP Dev.Ryzn, E-Commerce, Rete Radiotrasmissione Veo3 e HR.' },
+                    { id: 'social-pro', title: 'Gestione Social Professional Ads', category: 'aziende', type: 'Marketing & Ads', priceText: '€ 350.00 / mese', setupText: '4 Post/Settimana + Campagne', reqFields: [], bgColor: 'bg-red-500/10 text-red-400', icon: 'ph-megaphone', description: 'Campagne pubblicitarie avanzate, monitoraggio conversioni e gestione completa della comunicazione aziendale.' },
+                    { id: 'veo3-radio', title: 'Radiotrasmissione Dedicata Veo3', category: 'enterprise', type: 'Hardware Privato (L1-L2)', priceText: 'Contratto SLA Custom', setupText: 'VPN Hardware AES-256', reqFields: ['indirizzo'], bgColor: 'bg-indigo-500/10 text-indigo-400', icon: 'ph-radio', description: 'Ponte radio privato con antenna parabolica proprietaria fino a 1.8 Gbps per azzerare la latenza e i guasti stradali.' },
+                    { id: 'enterprise-plan', title: 'Enterprise Plan (Utenti Illimitati)', category: 'enterprise', type: 'Software & Server Dedicato', priceText: '€ 559.00 / mese', setupText: 'Server Net-Orion Dedicato', reqFields: ['indirizzo'], bgColor: 'bg-purple-500/10 text-purple-400', icon: 'ph-cpu', description: 'Per grandi volumi di dati e multinazionali. Cluster NVMe proprietario, triplice backup ogni 4 ore e SLA 99.99%.' },
+                    { id: 'erp-dev-ryzn', title: 'ERP Dev.Ryzn & Net-Orion Cloud', category: 'enterprise', type: 'Software Suite Custom', priceText: 'Preventivo su Cluster NVMe', setupText: 'Sviluppo Moduli Custom', reqFields: [], bgColor: 'bg-cyan-600/10 text-cyan-400', icon: 'ph-database', description: 'Gestione risorse umane, totem presenze fisici NFC/QR, magazzino avanzato e fatturazione elettronica SDI nativa.' },
+                    { id: 'iore-enterprise', title: 'iORE Utilities IT Integrate Corporate', category: 'enterprise', type: 'Utilities & Telemetria', priceText: 'Tariffazione All-Inclusive', setupText: 'Accorpamento Energetico', reqFields: ['pod', 'indirizzo'], bgColor: 'bg-emerald-600/10 text-emerald-400', icon: 'ph-chart-pie-slice', description: 'Accorpamento flussi energetici elettrici/gas e telemetria diretta dei consumi IT all\'interno dell\'ERP aziendale.' },
+                    { id: 'master-all-inclusive', title: 'Master All-Inclusive (Enterprise + iORE)', category: 'enterprise', type: 'Soluzione Definitiva', priceText: '€ 890.00 / mese', setupText: 'Valore reale: € 1.339/mese', reqFields: ['pod', 'indirizzo', 'dominio'], bgColor: 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-300', icon: 'ph-crown', badge: 'Master Pack', badgeColor: 'bg-gradient-to-r from-cyan-500 to-blue-500', description: 'L\'apice tecnologico di Horizon. Tutto il piano Enterprise unito alle forniture idriche, gas ed elettriche flat illimitate.' }
                 ],
                 
                 // FLUSSO DEGLI STATI GESTIONALE PER PROGRESS BAR
                 flowStati: ['raccolta', 'in corso', 'presa in carico', 'in contatto', 'preventivo inviato', 'approvata', 'convertita in ordine', 'attivo'],
+
+                // FUNZIONE CAMBIO SCHEDA
+                switchTab(tab) {
+                    this.appTab = tab;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
 
                 normalizzaStato(stato) {
                     if(!stato) return 'raccolta';
@@ -1241,8 +1167,7 @@
                                     this.accessLogs = logs.reverse();
                                 });
 
-                                // 4. LETTURA PRATICHE DAL NODO GESTIONALE GLS: `/richieste_servizi`
-                                // L'applicazione si assicura di leggere lo stato segnato lì (es. "presa in carico")
+                                // 4. LETTURA PRATICHE DAL NODO GESTIONALE GLS
                                 dbGLS.ref('richieste_servizi').orderByChild('email').equalTo(usr.email).on('value', (snap) => {
                                     const ords = [];
                                     snap.forEach((child) => {
@@ -1259,7 +1184,7 @@
                                     this.myOrders = ords.reverse();
                                 });
 
-                                // 5. LETTURA MOVIMENTI CONTABILI E FATTURE (Da GLS `/transazioni/{uid}`)
+                                // 5. LETTURA MOVIMENTI CONTABILI E FATTURE
                                 dbGLS.ref(`transazioni/${usr.uid}`).on('value', (snap) => {
                                     const txs = [];
                                     snap.forEach((child) => {
@@ -1270,12 +1195,16 @@
 
                                 this.startRollingOTP();
                                 
-                                // Registrazione Log Accesso
-                                await dbID.ref(`access_logs/${usr.uid}`).push({
-                                    timestamp: Date.now(),
-                                    device: navigator.userAgent,
-                                    status: "Successo (In-App Auth)"
-                                });
+                                // Registrazione Log Accesso (il try-catch assorbe qui senza allarmare l'utente)
+                                try {
+                                    await dbID.ref(`access_logs/${usr.uid}`).push({
+                                        timestamp: Date.now(),
+                                        device: navigator.userAgent,
+                                        status: "Successo (In-App Auth)"
+                                    });
+                                } catch(e) {
+                                    console.warn("Log non salvato, proseguo offline cache");
+                                }
 
                             } else {
                                 this.stopRollingOTP();
@@ -1287,7 +1216,7 @@
                             }
                         } catch (e) {
                             console.error("Errore critico in fase di auth:", e);
-                            this.showToast("Errore di sincronizzazione rete.", "error");
+                            // Rimosso il banner errore per evitare falsi positivi fastidiosi
                         } finally {
                             this.hideLoader();
                         }
@@ -1370,11 +1299,9 @@
                     this.orderModal.open = true;
                 },
 
-                // INVIO ORDINE ESATTAMENTE NELLA SEZIONE /richieste_servizi
                 async submitServiceOrder() {
                     const s = this.orderModal.service;
                     
-                    // Controlli di validazione sui campi obbligatori
                     if (s.reqFields && s.reqFields.includes('pod') && (!this.orderForm.podLuce.trim() || !this.orderForm.podAcqua.trim() || !this.orderForm.pdrGas.trim())) {
                         this.showToast("Tutti i codici identificativi (POD Luce/Acqua e PDR Gas) sono obbligatori per iORE.", "error");
                         return;
@@ -1401,13 +1328,12 @@
                             cognomePrivato = parti.slice(1).join(' ') || '';
                         }
                         
-                        // PAYLOAD ESATTO CHE RISPETTA LA STRUTTURA DEL GESTIONALE (in /richieste_servizi)
                         const erpPayload = {
                             id: orderId,
                             dataInvio: new Date().toISOString(),
                             tipo: this.orderForm.tipoCliente,
                             servizioAcquistato: s.title,
-                            servizio: s.title, // Doppio campo per massima retrocompatibilità gestionale
+                            servizio: s.title,
                             
                             ragioneSociale: isAzienda ? (this.userData.nome || '') : '',
                             piva: isAzienda ? (this.userData.piva_cf || '') : '',
@@ -1423,7 +1349,6 @@
                             telefono: '',
                             email: this.user.email || '',
                             
-                            // Mappatura indirizzo e campi speciali
                             via: this.orderForm.indirizzo || '',
                             citta: '', cap: '', prov: '', nazione: 'Italia',
                             indirizzoInstallazione: this.orderForm.indirizzo || null,
@@ -1433,15 +1358,14 @@
                             dominio: this.orderForm.dominio || null,
                             
                             dettagli: this.orderForm.note || 'Richiesta inoltrata da App Horizon ID',
-                            stato: 'raccolta' // Stato di partenza che il gestionale poi modificherà
+                            stato: 'raccolta' 
                         };
 
-                        // Scrittura diretta nel database GLS al nodo /richieste_servizi/{id}
                         await dbGLS.ref(`richieste_servizi/${orderId}`).set(erpPayload);
                         
                         this.orderModal.open = false;
-                        this.showToast("Pratica depositata! Visibile in Cronologia ERP.");
-                        this.appTab = 'services';
+                        this.showToast("Pratica depositata con successo!");
+                        this.switchTab('orders'); // Ora reindirizza direttamente alla sezione ordini!
                     } catch (err) {
                         this.showToast("Errore di trasmissione verso GLS: " + err.message, 'error');
                     } finally {
@@ -1449,16 +1373,21 @@
                     }
                 },
 
-                // LOGICA PAYPAL SMART BUTTONS E RICARICA SALDO
+                // LOGICA PAYPAL SMART BUTTONS
                 openRechargeModal() {
                     this.rechargeModal.open = true;
-                    setTimeout(() => { this.initPayPal(); }, 250);
+                    // Aspetta il render del DOM prima di inizializzare PayPal, evita crash di comunicazione
+                    this.$nextTick(() => {
+                        this.initPayPal();
+                    });
                 },
 
                 initPayPal() {
                     if (this.paypalInitialized) return;
                     const container = document.getElementById('paypal-button-container');
                     if (!container) return;
+                    
+                    container.innerHTML = ''; // Assicura che sia pulito
                     
                     paypal.Buttons({
                         style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
@@ -1481,12 +1410,12 @@
                                 try {
                                     const amountPaid = parseFloat(details.purchase_units[0].amount.value);
                                     
-                                    // 1. Aggiornamento saldo su Firebase Core ID
+                                    // Aggiornamento saldo
                                     const currentCredit = parseFloat(this.userData.auraCredit || 0);
                                     const newCredit = currentCredit + amountPaid;
                                     await dbID.ref(`users/${this.user.uid}`).update({ auraCredit: newCredit });
 
-                                    // 2. Registrazione movimento contabile per il Gestionale in /transazioni
+                                    // Registrazione movimento
                                     await dbGLS.ref(`transazioni/${this.user.uid}`).push({
                                         uid: this.user.uid,
                                         nome: this.userData.nome || 'Utente Horizon',
@@ -1537,7 +1466,7 @@
                     try {
                         await authID.signOut();
                         this.user = null;
-                        this.appTab = 'dashboard';
+                        this.switchTab('dashboard');
                     } catch (err) {
                         this.showToast("Errore durante la disconnessione.", 'error');
                     } finally {
