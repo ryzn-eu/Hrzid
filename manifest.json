@@ -1,21 +1,26 @@
 {
-  "name": "Horizon ID | Master Ecosystem",
+  "id": "/",
+  "name": "Horizon ID",
   "short_name": "Horizon ID",
   "description": "Ecosistema Digitale Unificato Horizon Global",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2906/2906274.png",
+      "src": "/icone/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2906/2906274.png",
+      "src": "/icone/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
