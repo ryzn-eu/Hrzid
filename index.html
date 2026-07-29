@@ -103,10 +103,11 @@
                             </div>
 
                             <div id="android-instructions" class="hidden text-left space-y-4">
-                                <button id="pwa-install-btn" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
-                                    <i class="ph-bold ph-download-simple text-lg"></i>
-                                    Installa Horizon ID ora
-                                </button>
+                                <button id="pwa-install-btn" onclick="installaApp()" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
+    <i class="ph-bold ph-download-simple text-lg"></i>
+    Installa Horizon ID ora
+</button>
+
                                 <div class="bg-white/5 border border-white/10 rounded-[20px] p-4 space-y-3">
                                     <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Installazione Manuale (Alternativa)</p>
                                     <div class="flex items-start gap-3 text-gray-300">
@@ -1462,5 +1463,34 @@
         });
       }
     </script>
+    <script>
+  let deferredPrompt;
+
+  // Intercetta l'evento di installazione di Chrome
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Impedisce a Chrome di mostrare il suo mini-popup automatico
+    e.preventDefault();
+    // Salva l'evento per usarlo quando clicchi il bottone
+    deferredPrompt = e;
+    console.log("PWA pronta per essere installata tramite bottone!");
+  });
+
+  // Funzione da collegare al tuo bottone
+  async function installaApp() {
+    if (deferredPrompt) {
+      // Mostra il vero popup di installazione di Android
+      deferredPrompt.prompt();
+      // Aspetta che l'utente scelga "Installa" o "Annulla"
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`Risultato installazione: ${outcome}`);
+      // Svuota la variabile perché può essere usata una volta sola
+      deferredPrompt = null;
+    } else {
+      // Se non c'è l'evento, significa che è già installata o su iOS
+      alert("L'app è già installata oppure stai usando Safari su iOS (usa il tasto 'Condividi' > 'Aggiungi alla schermata Home').");
+    }
+  }
+</script>
+
 </body>
 </html>
