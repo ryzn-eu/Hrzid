@@ -1,7 +1,7 @@
 const CACHE_NAME = 'horizon-id-v1';
 const ASSETS = [
-  '/',
-  '/index.html'
+  './',
+  './index.html'
 ];
 
 self.addEventListener('install', (e) => {
