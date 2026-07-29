@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Horizon ID | Master Ecosystem App</title>
     
+    <!-- Collegamento alla PWA (Manifest) applicato -->
+    <link rel="manifest" href="/manifest.json">
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -1299,249 +1302,155 @@
                     this.orderForm.pdrGas = '';
                     this.orderForm.indirizzo = '';
                     this.orderForm.dominio = '';
+                    this.orderForm.tipoCliente = 'Privato';
                     this.orderModal.open = true;
                 },
 
                 async submitServiceOrder() {
-                    const s = this.orderModal.service;
-                    
-                    if (s.reqFields && s.reqFields.includes('pod') && (!this.orderForm.podLuce.trim() || !this.orderForm.podAcqua.trim() || !this.orderForm.pdrGas.trim())) {
-                        this.showToast("Tutti i codici identificativi (POD Luce/Acqua e PDR Gas) sono obbligatori per iORE.", "error");
-                        return;
-                    }
-                    if (s.reqFields && s.reqFields.includes('indirizzo') && !this.orderForm.indirizzo.trim()) {
-                        this.showToast("L'indirizzo di installazione è richiesto per configurare il modulo.", "error");
-                        return;
-                    }
-                    if (s.reqFields && s.reqFields.includes('dominio') && !this.orderForm.dominio.trim()) {
-                        this.showToast("Specifica il nome a dominio desiderato per procedere.", "error");
-                        return;
-                    }
-
-                    this.showLoader("Inoltro pratica tecnica al Gestionale Horizon...");
+                    this.showLoader("Trasmissione ordine al gestionale...");
                     try {
-                        const orderId = Date.now();
-                        const isAzienda = this.orderForm.tipoCliente === 'Azienda';
-                        
-                        let nomePrivato = '';
-                        let cognomePrivato = '';
-                        if (this.userData.nome) {
-                            const parti = this.userData.nome.trim().split(' ');
-                            nomePrivato = parti[0] || '';
-                            cognomePrivato = parti.slice(1).join(' ') || '';
-                        }
-                        
-                        const erpPayload = {
-                            id: orderId,
+                        const payload = {
+                            servizioAcquistato: this.orderModal.service.title,
+                            tipoCliente: this.orderForm.tipoCliente,
+                            email: this.user.email,
+                            uid: this.user.uid,
+                            nomeCliente: this.userData.nome,
+                            cf_piva: this.userData.piva_cf,
                             dataInvio: new Date().toISOString(),
-                            tipo: this.orderForm.tipoCliente,
-                            servizioAcquistato: s.title,
-                            servizio: s.title,
-                            
-                            ragioneSociale: isAzienda ? (this.userData.nome || '') : '',
-                            piva: isAzienda ? (this.userData.piva_cf || '') : '',
-                            cfAzienda: isAzienda ? (this.userData.piva_cf || '') : '',
-                            telAzienda: '',
-                            emailAzienda: isAzienda ? (this.user.email || '') : '',
-                            sdi: '',
-                            pec: '',
-                            
-                            nome: !isAzienda ? nomePrivato : (this.userData.nome || ''),
-                            cognome: !isAzienda ? cognomePrivato : '',
-                            cfPrivato: !isAzienda ? (this.userData.piva_cf || '') : '',
-                            telefono: '',
-                            email: this.user.email || '',
-                            
-                            via: this.orderForm.indirizzo || '',
-                            citta: '', cap: '', prov: '', nazione: 'Italia',
-                            indirizzoInstallazione: this.orderForm.indirizzo || null,
-                            podLuce: this.orderForm.podLuce || null,
-                            podAcqua: this.orderForm.podAcqua || null,
-                            pdrGas: this.orderForm.pdrGas || null,
-                            dominio: this.orderForm.dominio || null,
-                            
-                            dettagli: this.orderForm.note || 'Richiesta inoltrata da App Horizon ID',
-                            stato: 'raccolta' 
+                            stato: 'raccolta',
+                            note: this.orderForm.note || ''
                         };
-
-                        await dbGLS.ref(`richieste_servizi/${orderId}`).set(erpPayload);
                         
+                        if (this.orderModal.service.reqFields) {
+                            if (this.orderModal.service.reqFields.includes('pod')) {
+                                payload.podLuce = this.orderForm.podLuce;
+                                payload.podAcqua = this.orderForm.podAcqua;
+                                payload.pdrGas = this.orderForm.pdrGas;
+                            }
+                            if (this.orderModal.service.reqFields.includes('indirizzo')) payload.indirizzo = this.orderForm.indirizzo;
+                            if (this.orderModal.service.reqFields.includes('dominio')) payload.dominio = this.orderForm.dominio;
+                        }
+
+                        await dbGLS.ref('richieste_servizi').push(payload);
+                        this.showToast("Pratica aperta correttamente.");
                         this.orderModal.open = false;
-                        this.showToast("Pratica depositata con successo!");
-                        this.switchTab('orders'); 
-                    } catch (err) {
-                        this.showToast("Errore di trasmissione verso GLS: " + err.message, 'error');
+                    } catch(e) {
+                        this.showToast("Errore di rete.", 'error');
                     } finally {
                         this.hideLoader();
                     }
                 },
 
                 openRechargeModal() {
+                    this.rechargeModal.amount = 50;
                     this.rechargeModal.open = true;
-                    this.$nextTick(() => {
-                        this.initPayPal();
-                    });
-                },
-
-                initPayPal() {
-                    if (this.paypalInitialized) return;
-                    const container = document.getElementById('paypal-button-container');
-                    if (!container) return;
-                    
-                    container.innerHTML = ''; 
-                    
-                    paypal.Buttons({
-                        style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
-                        createOrder: (data, actions) => {
-                            const currentAmount = parseFloat(this.rechargeModal.amount);
-                            if (isNaN(currentAmount) || currentAmount < 5) {
-                                this.showToast('L\'importo minimo di ricarica è di 5.00 €.', 'error');
-                                return;
+                    if (!this.paypalInitialized) {
+                        setTimeout(() => {
+                            if(window.paypal) {
+                                paypal.Buttons({
+                                    createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: this.rechargeModal.amount.toString() } }] }),
+                                    onApprove: async (data, actions) => {
+                                        const order = await actions.order.capture();
+                                        this.showLoader("Accredito in corso...");
+                                        try {
+                                            const amount = parseFloat(order.purchase_units[0].amount.value);
+                                            await dbID.ref(`users/${this.user.uid}`).update({ auraCredit: (parseFloat(this.userData.auraCredit) || 0) + amount });
+                                            await dbGLS.ref(`transazioni/${this.user.uid}`).push({
+                                                timestamp: Date.now(),
+                                                importo: amount,
+                                                tipo: 'Ricarica Saldo AuraCredit',
+                                                paypal_order_id: order.id,
+                                                stato: 'approvato'
+                                            });
+                                            this.showToast("AuraCredit ricaricato con successo!");
+                                            this.rechargeModal.open = false;
+                                        } catch(e) {
+                                            this.showToast("Errore durante l'accredito.", 'error');
+                                        } finally {
+                                            this.hideLoader();
+                                        }
+                                    }
+                                }).render('#paypal-button-container');
+                                this.paypalInitialized = true;
                             }
-                            // Aggiunto "currency_code: EUR" esplicito per prevenire l'errore gateway
-                            return actions.order.create({
-                                purchase_units: [{
-                                    amount: { 
-                                        currency_code: "EUR",
-                                        value: currentAmount.toFixed(2) 
-                                    },
-                                    description: `Ricarica Conto AuraCredit - ID: ${this.user.uid}`
-                                }]
-                            });
-                        },
-                        onApprove: (data, actions) => {
-                            return actions.order.capture().then(async (details) => {
-                                this.showLoader("Accredito transazione in corso...");
-                                try {
-                                    const amountPaid = parseFloat(details.purchase_units[0].amount.value);
-                                    
-                                    const currentCredit = parseFloat(this.userData.auraCredit || 0);
-                                    const newCredit = currentCredit + amountPaid;
-                                    await dbID.ref(`users/${this.user.uid}`).update({ auraCredit: newCredit });
-
-                                    await dbGLS.ref(`transazioni/${this.user.uid}`).push({
-                                        uid: this.user.uid,
-                                        nome: this.userData.nome || 'Utente Horizon',
-                                        cf: this.userData.piva_cf || '',
-                                        tipo: 'Ricarica Conto PayPal',
-                                        servizio: 'AuraCredit Refill',
-                                        importo: amountPaid,
-                                        paypal_order_id: details.id,
-                                        data: new Date().toLocaleDateString('it-IT'),
-                                        timestamp: Date.now(),
-                                        stato: 'Pagato'
-                                    });
-
-                                    this.showToast(`Ricarica di € ${amountPaid.toFixed(2)} accreditata con successo!`);
-                                    this.rechargeModal.open = false;
-                                } catch (e) {
-                                    this.showToast("Errore durante l'aggiornamento del saldo: " + e.message, "error");
-                                } finally {
-                                    this.hideLoader();
-                                }
-                            });
-                        },
-                        onError: (err) => {
-                            this.showToast('Si è verificato un errore con il gateway PayPal.', 'error');
-                            console.error("PayPal Error:", err);
-                        }
-                    }).render('#paypal-button-container');
-                    this.paypalInitialized = true;
+                        }, 500);
+                    }
                 },
 
                 async sendChatMessage() {
                     if (!this.newMessage.trim()) return;
+                    const msgText = this.newMessage.trim();
+                    this.newMessage = '';
                     try {
-                        await dbID.ref(`chats/${this.user.uid}`).push({
-                            sender: 'user',
-                            message: this.newMessage,
-                            timestamp: Date.now()
-                        });
-                        this.newMessage = '';
+                        await dbID.ref(`chats/${this.user.uid}`).push({ sender: 'user', text: msgText, timestamp: Date.now() });
                         this.autoScrollChat();
-                    } catch (err) {
-                        this.showToast("Errore nell'invio del messaggio.", 'error');
+                    } catch(e) {
+                        this.showToast("Errore invio.", "error");
                     }
                 },
 
-                async logout() {
-                    this.showLoader("Disconnessione sicura dai server...");
-                    try {
-                        await authID.signOut();
-                        this.user = null;
-                        this.switchTab('dashboard');
-                    } catch (err) {
-                        this.showToast("Errore durante la disconnessione.", 'error');
-                    } finally {
-                        this.hideLoader();
-                    }
+                autoScrollChat() {
+                    setTimeout(() => {
+                        const chat = document.getElementById('chatWindow');
+                        if (chat) chat.scrollTop = chat.scrollHeight;
+                    }, 100);
+                },
+
+                formatDate(isoString) {
+                    if(!isoString) return '';
+                    const d = new Date(isoString);
+                    return isNaN(d.getTime()) ? isoString : d.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                },
+
+                copyToClipboard(text) {
+                    if(navigator.clipboard) navigator.clipboard.writeText(text);
+                    this.showToast("Dato copiato negli appunti.");
                 },
 
                 startRollingOTP() {
-                    const generator = () => {
-                        let num = Math.floor(100000 + Math.random() * 900000).toString();
-                        this.otpPin = num.substring(0,3) + '-' + num.substring(3,6);
-                        
-                        const bar = document.getElementById('otpLinearProgress');
-                        if (bar) {
-                            bar.style.transition = 'none';
-                            bar.style.width = '100%';
-                            bar.getBoundingClientRect();
-                            bar.style.transition = 'width 30s linear';
-                            bar.style.width = '0%';
+                    const gen = () => {
+                        this.otpPin = Math.floor(100000 + Math.random() * 900000).toString().replace(/(\d{3})(\d{3})/, '$1-$2');
+                        const prog = document.getElementById('otpLinearProgress');
+                        if(prog) {
+                            prog.style.transition = 'none';
+                            prog.style.width = '100%';
+                            setTimeout(() => {
+                                prog.style.transition = 'width 30s linear';
+                                prog.style.width = '0%';
+                            }, 50);
                         }
                     };
-                    generator();
-                    this.otpInterval = setInterval(generator, 30000);
+                    gen();
+                    this.otpInterval = setInterval(gen, 30000);
                 },
 
                 stopRollingOTP() {
                     if (this.otpInterval) clearInterval(this.otpInterval);
                 },
 
-                autoScrollChat() {
-                    setTimeout(() => {
-                        const win = document.getElementById('chatWindow');
-                        if (win) win.scrollTop = win.scrollHeight;
-                    }, 120);
+                async logout() {
+                    try {
+                        await authID.signOut();
+                        this.showToast("Disconnessione effettuata.");
+                    } catch(e) {}
                 },
 
-                copyToClipboard(text) {
-                    if(!text) return;
-                    navigator.clipboard.writeText(text).then(() => {
-                        this.showToast("Dato copiato negli appunti.");
-                    });
-                },
-
-                showLoader(txt) { this.globalLoader = { show: true, text: txt }; },
-                hideLoader() { this.globalLoader.show = false; },
-                showToast(msg, type = 'success') {
+                showToast(message, type = 'success') {
                     const id = Date.now();
-                    this.toasts.push({ id, message: msg, type });
-                    setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 4000);
+                    this.toasts.push({ id, message, type });
+                    setTimeout(() => this.toasts = this.toasts.filter(t => t.id !== id), 3000);
                 },
-                formatDate(ts) {
-                    if (!ts) return '';
-                    const d = new Date(ts);
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const yy = String(d.getFullYear()).slice(-2);
-                    const hh = String(d.getHours()).padStart(2, '0');
-                    const min = String(d.getMinutes()).padStart(2, '0');
-                    return `${dd}/${mm}/${yy} ${hh}:${min}`;
+
+                showLoader(text) {
+                    this.globalLoader.text = text;
+                    this.globalLoader.show = true;
+                },
+
+                hideLoader() {
+                    this.globalLoader.show = false;
                 }
             }));
         });
     </script>
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('Service Worker registrato con successo:', reg.scope))
-                .catch(err => console.log('Registrazione Service Worker fallita:', err));
-        });
-    }
-</script>
-
 </body>
 </html>
