@@ -55,16 +55,9 @@
         .glow-button:active {
             transform: scale(0.96);
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         html { scroll-behavior: smooth; }
@@ -96,15 +89,7 @@
                         window.location.search.includes('mode=pwa');
             
             if (!isPwa) {
-                var style = document.createElement('style');
-                style.id = 'pwa-lock-style';
-                style.innerHTML = 'body { display: none !important; }';
-                document.head.appendChild(style);
-                
                 window.addEventListener('DOMContentLoaded', function() {
-                    var lockStyle = document.getElementById('pwa-lock-style');
-                    if(lockStyle) lockStyle.remove();
-                    
                     var lockDiv = document.createElement('div');
                     lockDiv.id = 'pwa-lock-screen';
                     lockDiv.className = 'fixed inset-0 z-[10000] bg-black flex items-center justify-center p-4 select-none overflow-y-auto';
@@ -163,7 +148,7 @@
     </div>
 
     <!-- AUTH SECTION -->
-    <div x-show="!user" class="min-h-screen flex items-center justify-center p-4 relative" style="background: radial-gradient(circle at 50% 0%, #1c1c1e 0%, #000000 100%);">
+    <div x-show="!user" class="min-h-screen flex items-center justify-center p-4 relative" style="background: radial-gradient(circle at 50% 0%, #1c1c1e 0%, #000000 100%);" x-cloak>
         <div class="w-full max-w-md glass-panel p-8 rounded-[32px] shadow-2xl border border-white/10">
             <div class="text-center mb-8">
                 <div class="inline-flex p-3.5 bg-[#0A84FF]/10 rounded-2xl border border-[#0A84FF]/20 mb-4 shadow-inner">
@@ -648,7 +633,7 @@
             </div>
         </div>
 
-        <!-- MODAL FORM D'ORDINE PRE-COMPILATO (STRUTTURA ERP ESATTA) -->
+        <!-- MODAL FORM D'ORDINE PRE-COMPILATO -->
         <div x-show="orderModal.open" class="fixed inset-0 bg-black/80 z-[8500] flex items-center justify-center p-4 backdrop-blur-xl" style="display: none;" x-transition>
             <div class="w-full max-w-xl glass-panel p-6 sm:p-8 rounded-[32px] border border-white/15 relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <button @click="orderModal.open = false" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
@@ -658,7 +643,6 @@
 
                 <form @submit.prevent="submitServiceOrder" class="space-y-4 text-xs">
                     
-                    <!-- CAMPI EREDITATI DALL'HORIZON ID (BLOCCATI / PRECOMPILATI) -->
                     <div class="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-3">
                         <span class="text-[10px] font-bold text-[#0A84FF] uppercase tracking-widest block flex items-center gap-1">
                             <i class="ph-fill ph-shield-check"></i> Dati Verificati da Horizon ID
@@ -687,7 +671,6 @@
                         </div>
                     </div>
 
-                    <!-- CAMPI OPERATIVI DA COMPILARE A CURA DELL'UTENTE -->
                     <div class="space-y-3">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Dati Operativi e Sede</span>
                         
@@ -758,12 +741,13 @@
             const fbConfigGLS = { databaseURL: "https://horizongls-default-rtdb.europe-west1.firebasedatabase.app" };
             const fbConfigID = { databaseURL: "https://horizon-id-core-default-rtdb.europe-west1.firebasedatabase.app" };
 
-            const appGLS = firebase.initializeApp(fbConfigGLS);
-            const appID = firebase.initializeApp(fbConfigID, "HorizonIDApp");
+            // Inizializzazione sicura con controllo delle istanze Firebase esistenti
+            const appGLS = !firebase.apps.some(app => app.name === "[DEFAULT]") ? firebase.initializeApp(fbConfigGLS) : firebase.app();
+            const appID = !firebase.apps.some(app => app.name === "HorizonIDApp") ? firebase.initializeApp(fbConfigID, "HorizonIDApp") : firebase.app("HorizonIDApp");
 
             const dbGLS = firebase.database(appGLS);
             const dbID = firebase.database(appID);
-            const authID = firebase.app("HorizonIDApp").auth();
+            const authID = authID = appID.auth();
 
             Alpine.data('horizonEcosystem', () => ({
                 user: null,
@@ -1061,7 +1045,7 @@
                 showToast(message, type = 'success') {
                     const id = Date.now();
                     this.toasts.push({ id, message, type });
-                    setTimeout(() => this.toasts = this.toasts.filter(t => t.id !== id), 3000);
+                    setTimeout(() => this.toasts = this.toasts.filter(t => t.id != id), 3000);
                 }
             }));
         });
