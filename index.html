@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Horizon ID - Ecosistema Unificato</title>
+    <title>Horizon ID</title>
     
-    <!-- PWA Manifest & Meta -->
+    <!-- Collegamento alla PWA (Manifest) applicato -->
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Horizon ID">
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -26,8 +22,8 @@
     <style>
         :root {
             --bg-deep: #000000;
-            --glass-bg: rgba(28, 28, 30, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-bg: rgba(28, 28, 30, 0.70);
+            --glass-border: rgba(255, 255, 255, 0.1);
             --accent-neon: #0A84FF;
             --accent-glow: rgba(10, 132, 255, 0.35);
         }
@@ -46,7 +42,7 @@
             backdrop-filter: blur(28px);
             -webkit-backdrop-filter: blur(28px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
         .glow-button {
             box-shadow: 0 4px 14px var(--accent-glow);
@@ -57,42 +53,137 @@
         }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         html { scroll-behavior: smooth; }
         [x-cloak] { display: none !important; }
     </style>
+    
+    <script>
+        (function() {
+            var isPwa = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone === true || 
+                        window.location.search.includes('mode=pwa') ||
+                        window.location.protocol === 'file:' ||
+                        window.location.protocol === 'content:'; // Permette il debug locale senza schermo nero fisso
+            
+            if (!isPwa) {
+                var style = document.createElement('style');
+                style.id = 'pwa-lock-style';
+                style.innerHTML = 'body { display: none !important; }';
+                document.head.appendChild(style);
+                
+                window.addEventListener('DOMContentLoaded', function() {
+                    var lockStyle = document.getElementById('pwa-lock-style');
+                    if(lockStyle) lockStyle.remove();
+                    
+                    var lockDiv = document.createElement('div');
+                    lockDiv.id = 'pwa-lock-screen';
+                    lockDiv.className = 'fixed inset-0 z-[10000] bg-black flex items-center justify-center p-4 select-none overflow-y-auto';
+                    lockDiv.style.background = 'radial-gradient(circle at 50% 30%, #1c1c1e 0%, #000000 100%)';
+                    
+                    var innerContent = `
+                        <div class="w-full max-w-md glass-panel p-6 rounded-[32px] shadow-2xl text-center border border-white/10 my-8">
+                            <div class="inline-flex p-4 bg-[#0A84FF]/10 rounded-2xl border border-[#0A84FF]/20 mb-4 animate-pulse">
+                                <i class="ph-fill ph-cell-tower text-4xl text-[#0A84FF]"></i>
+                            </div>
+                            <h1 class="text-2xl font-extrabold tracking-tight text-white mb-2">Installazione Richiesta</h1>
+                            <p class="text-sm text-gray-400 mb-6 leading-relaxed">Per garantire la massima sicurezza e stabilità, l'ecosistema <strong>Horizon ID</strong> deve essere eseguito esclusivamente come App installata sul dispositivo.</p>
+                            
+                            <div class="mb-6 inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
+                                <span class="w-2 h-2 rounded-full bg-[#0A84FF] animate-pulse"></span>
+                                <span id="detected-os-badge" class="text-xs font-bold text-gray-300 uppercase tracking-wider">Rilevamento sistema...</span>
+                            </div>
+
+                            <div id="android-instructions" class="hidden text-left space-y-4">
+                                <button id="pwa-install-btn" onclick="installaApp()" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
+                                    <i class="ph-bold ph-download-simple text-lg"></i>
+                                    Installa Horizon ID ora
+                                </button>
+
+                                <div class="bg-white/5 border border-white/10 rounded-[20px] p-4 space-y-3">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Installazione Manuale (Alternativa)</p>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">1</span>
+                                        <p class="text-xs">Tocca i tre puntini in alto a destra <i class="ph-bold ph-dots-three-vertical inline text-base text-[#0A84FF]"></i> nella barra di Chrome.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                        <p class="text-xs">Nel menu che si apre, individua e seleziona la voce <strong class="text-white">"Installa app"</strong> o <strong class="text-white">"Aggiungi a schermata Home"</strong>.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="pc-instructions" class="hidden text-left space-y-4">
+                                <button id="pwa-install-btn-pc" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
+                                    <i class="ph-bold ph-desktop text-lg"></i>
+                                    Installa su Desktop
+                                </button>
+                                <div class="bg-white/5 border border-white/10 rounded-[20px] p-4 space-y-3">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Installazione tramite Browser</p>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">1</span>
+                                        <p class="text-xs">Guarda la barra degli indirizzi in alto. Troverai l'icona di installazione <i class="ph-bold ph-download-simple inline text-base text-[#0A84FF]"></i> sul lato destro.</p>
+                                    </div>
+                                    <div class="flex items-start gap-3 text-gray-300">
+                                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                        <p class="text-xs">In alternativa, clicca sul menu delle opzioni <i class="ph-bold ph-dots-three-vertical inline text-base text-[#0A84FF]"></i> e seleziona <strong class="text-white">"Salva e installa"</strong> &rarr; <strong class="text-white">"Installa pagina come app"</strong>.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="ios-generic-instructions" class="hidden text-left bg-white/5 border border-white/10 rounded-[20px] p-4 space-y-3">
+                                <p class="text-xs font-bold uppercase tracking-wider text-[#0A84FF] text-center mb-1">Guida Passo-Passo iOS / iPadOS</p>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-[#0A84FF] flex items-center justify-center text-[11px] font-bold mt-0.5 text-white">1</span>
+                                    <p class="text-xs">Usa il browser <strong class="text-white">Safari</strong> ed individua l'icona di condivisione <i class="ph-bold ph-share-network text-[#0A84FF] inline text-base mx-0.5"></i> in basso sullo schermo.</p>
+                                </div>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">2</span>
+                                    <p class="text-xs">Scorri verticalmente il menu delle opzioni comparso.</p>
+                                </div>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">3</span>
+                                    <p class="text-xs">Seleziona la voce <strong class="text-white">"Aggiungi alla schermata Home"</strong> <i class="ph-bold ph-plus-square text-[#0A84FF] inline text-base mx-0.5"></i>.</p>
+                                </div>
+                                <div class="flex items-start gap-3 text-gray-300">
+                                    <span class="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold mt-0.5">4</span>
+                                    <p class="text-xs">Tocca infine la voce <strong class="text-white">"Aggiungi"</strong> nell'angolo in alto a destra per completare.</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    lockDiv.innerHTML = innerContent;
+                    document.body.appendChild(lockDiv);
+                    
+                    var ua = navigator.userAgent;
+                    var isiOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+                    var isAndroid = /Android/i.test(ua);
+                    
+                    var badge = document.getElementById('detected-os-badge');
+                    var androidBox = document.getElementById('android-instructions');
+                    var pcBox = document.getElementById('pc-instructions');
+                    var iosBox = document.getElementById('ios-generic-instructions');
+                    
+                    if (isiOS) {
+                        badge.innerText = "Dispositivo: iPhone / iPad (iOS)";
+                        if(iosBox) iosBox.classList.remove('hidden');
+                    } else if (isAndroid) {
+                        badge.innerText = "Dispositivo: Android Detected";
+                        if(androidBox) androidBox.classList.remove('hidden');
+                    } else {
+                        badge.innerText = "Dispositivo: Personal Computer / Mac";
+                        if(pcBox) pcBox.classList.remove('hidden');
+                    }
+                });
+            }
+        })();
+    </script>
 </head>
 <body x-data="horizonEcosystem()" class="min-h-screen pb-28 md:pb-10">
 
-    <!-- BLOCCO PWA OBBLIGATORIO (Se non avviato in modalità standalone) -->
-    <div x-show="!isPwa" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 select-none overflow-y-auto" style="background: radial-gradient(circle at 50% 30%, #1c1c1e 0%, #000000 100%);">
-        <div class="w-full max-w-md glass-panel p-6 sm:p-8 rounded-[32px] shadow-2xl text-center border border-white/10 my-8">
-            <div class="inline-flex p-4 bg-[#0A84FF]/10 rounded-2xl border border-[#0A84FF]/20 mb-4 animate-pulse">
-                <i class="ph-fill ph-cell-tower text-4xl text-[#0A84FF]"></i>
-            </div>
-            <h1 class="text-2xl font-extrabold tracking-tight text-white mb-2">Installazione PWA Richiesta</h1>
-            <p class="text-sm text-gray-400 mb-6 leading-relaxed">Per garantire la sincronizzazione dei dati con i database Horizon e l'accesso sicuro ai servizi ERP, l'applicazione deve essere avviata dalla schermata principale come PWA.</p>
-            
-            <div class="mb-6 inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-[#0A84FF] animate-pulse"></span>
-                <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">Ambiente Protetto</span>
-            </div>
-
-            <div class="text-left space-y-4">
-                <button @click="installPwa" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
-                    <i class="ph-bold ph-download-simple text-lg"></i>
-                    Installa Horizon ID ora
-                </button>
-                <button @click="isPwa = true" class="w-full bg-white/5 hover:bg-white/10 text-gray-400 font-bold py-3 rounded-[16px] text-xs transition-colors">
-                    Forza apertura da browser (Debug)
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- GLOBAL LOADER -->
     <div x-show="globalLoader.show" class="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-center backdrop-blur-xl" x-transition>
         <div class="relative w-14 h-14 mb-4">
             <div class="absolute inset-0 border-[3px] border-white/10 rounded-full"></div>
@@ -101,8 +192,7 @@
         <p class="text-gray-300 font-semibold text-sm tracking-widest uppercase font-mono-tech" x-text="globalLoader.text"></p>
     </div>
 
-    <!-- TOAST NOTIFICATIONS -->
-    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[8900] w-full max-w-sm px-4 space-y-2 pointer-events-none">
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[8000] w-full max-w-sm px-4 space-y-2 pointer-events-none">
         <template x-for="toast in toasts" :key="toast.id">
             <div class="glass-panel px-4 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 transition duration-300 pointer-events-auto border"
                  :class="toast.type === 'error' ? 'border-[#FF453A]/40 bg-[#FF453A]/10' : 'border-[#32D74B]/40 bg-[#32D74B]/10'"
@@ -113,15 +203,15 @@
         </template>
     </div>
 
-    <!-- AUTH SECTION -->
-    <div x-show="isPwa && !user" class="min-h-screen flex items-center justify-center p-4 relative" style="background: radial-gradient(circle at 50% 0%, #1c1c1e 0%, #000000 100%);">
+    <!-- SEZIONE AUTENTICAZIONE -->
+    <div x-show="!user" class="min-h-screen flex items-center justify-center p-4 relative" style="background: radial-gradient(circle at 50% 0%, #1c1c1e 0%, #000000 100%);" x-cloak>
         <div class="w-full max-w-md glass-panel p-8 rounded-[32px] shadow-2xl border border-white/10">
             <div class="text-center mb-8">
                 <div class="inline-flex p-3.5 bg-[#0A84FF]/10 rounded-2xl border border-[#0A84FF]/20 mb-4 shadow-inner">
                     <i class="ph-fill ph-shield-check text-4xl text-[#0A84FF]"></i>
                 </div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-white">Horizon ID</h1>
-                <p class="text-xs text-gray-400 mt-1 font-medium" x-text="authMode === 'login' ? 'Ecosistema Digitale Unificato' : 'Crea il tuo profilo di rete B2B / B2C'"></p>
+                <p class="text-xs text-gray-400 mt-1 font-medium" x-text="authMode === 'login' ? 'Ecosistema Digitale Unificato' : 'Crea il tuo profilo di rete'"></p>
             </div>
 
             <form @submit.prevent="handleAuth" class="space-y-4">
@@ -129,49 +219,30 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Nome</label>
-                            <input type="text" x-model="authForm.nome" required placeholder="Mario" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all">
+                            <input type="text" x-model="authForm.nome" required placeholder="Mario" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] focus:bg-white/10 transition-all">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Cognome</label>
-                            <input type="text" x-model="authForm.cognome" required placeholder="Rossi" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all">
+                            <input type="text" x-model="authForm.cognome" required placeholder="Rossi" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] focus:bg-white/10 transition-all">
                         </div>
                     </div>
                 </template>
 
                 <template x-if="authMode === 'register'">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Codice Fiscale / P.IVA</label>
-                            <input type="text" x-model="authForm.cf" required placeholder="CF o P.IVA" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all font-mono-tech uppercase">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Telefono</label>
-                            <input type="tel" x-model="authForm.telefono" required placeholder="+39 333..." class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all">
-                        </div>
-                    </div>
-                </template>
-
-                <template x-if="authMode === 'register'">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Codice SDI (Opz.)</label>
-                            <input type="text" x-model="authForm.sdi" placeholder="0000000" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all font-mono-tech uppercase">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">PEC (Opz.)</label>
-                            <input type="email" x-model="authForm.pec" placeholder="pec@pec.it" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all">
-                        </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Codice Fiscale / P.IVA</label>
+                        <input type="text" x-model="authForm.cf" required placeholder="Inserisci il tuo CF o P.IVA" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] focus:bg-white/10 transition-all font-mono-tech tracking-wider uppercase">
                     </div>
                 </template>
 
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Indirizzo Email</label>
-                    <input type="email" x-model="authForm.email" required placeholder="nome@azienda.it" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all">
+                    <input type="email" x-model="authForm.email" required placeholder="nome@azienda.it" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] focus:bg-white/10 transition-all">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Chiave di Sicurezza</label>
-                    <input type="password" x-model="authForm.password" required placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] transition-all">
+                    <input type="password" x-model="authForm.password" required placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0A84FF] focus:bg-white/10 transition-all">
                 </div>
 
                 <button type="submit" class="w-full bg-[#0A84FF] text-white font-bold py-3.5 rounded-[16px] mt-6 glow-button flex items-center justify-center gap-2 text-sm tracking-wide">
@@ -189,7 +260,7 @@
     </div>
 
     <!-- MAIN DASHBOARD -->
-    <div x-show="isPwa && user" class="max-w-5xl mx-auto px-4 pt-6 md:pt-10">
+    <div x-show="user" class="max-w-5xl mx-auto px-4 pt-6 md:pt-10" x-cloak>
         
         <header class="glass-panel p-5 rounded-[28px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border border-white/10">
             <div class="flex items-center gap-4">
@@ -244,7 +315,7 @@
             
             <section class="glass-panel p-6 rounded-[28px]">
                 <h3 class="text-xs font-extrabold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
-                    <i class="ph-fill ph-fingerprint text-[#0A84FF] text-lg"></i> Stato Identità Digitale e KYC
+                    <i class="ph-fill ph-fingerprint text-[#0A84FF] text-lg"></i> Stato Identità Digitale
                 </h3>
 
                 <template x-if="userData.statoVerifica === 'mancante' || userData.statoVerifica === 'respinto'">
@@ -252,12 +323,12 @@
                         <div class="bg-[#FF453A]/10 border border-[#FF453A]/20 text-[#FF453A] p-4 rounded-[20px] text-xs mb-6 flex items-start gap-3" x-show="userData.statoVerifica === 'respinto'">
                             <i class="ph-fill ph-warning-circle text-xl flex-shrink-0"></i>
                             <div>
-                                <span class="font-bold">Verifica Rifiutata:</span> I documenti inseriti non sono validi o leggibili. Carica nuovamente i documenti per sbloccare l'accesso completo ai servizi ERP.
+                                <span class="font-bold">Verifica Rifiutata:</span> I documenti inseriti non sono risultati leggibili o validi. Effettua nuovamente il caricamento per sbloccare l'accesso al catalogo ERP.
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="border border-dashed border-white/20 bg-white/[0.02] p-6 rounded-[24px] text-center relative cursor-pointer group">
+                            <div class="border border-dashed border-white/20 bg-white/[0.02] p-6 rounded-[24px] text-center hover:bg-white/[0.04] transition-colors relative cursor-pointer group">
                                 <template x-if="!kycData.fronte">
                                     <div>
                                         <i class="ph-fill ph-camera text-3xl text-gray-500 mb-2 group-hover:text-[#0A84FF] transition-colors"></i>
@@ -268,13 +339,13 @@
                                 <template x-if="kycData.fronte">
                                     <div class="flex flex-col items-center justify-center">
                                         <i class="ph-fill ph-check-circle text-3xl text-[#32D74B] mb-2"></i>
-                                        <span class="text-xs font-bold text-white mb-2">Fronte Acquisito</span>
+                                        <span class="text-xs font-bold text-white mb-2">Fronte Caricato in Memoria</span>
                                         <button @click="kycData.fronte = ''" class="text-[#FF453A] bg-[#FF453A]/10 px-3 py-1 rounded-full text-xs font-bold z-10 relative">Rimuovi</button>
                                     </div>
                                 </template>
                             </div>
 
-                            <div class="border border-dashed border-white/20 bg-white/[0.02] p-6 rounded-[24px] text-center relative cursor-pointer group">
+                            <div class="border border-dashed border-white/20 bg-white/[0.02] p-6 rounded-[24px] text-center hover:bg-white/[0.04] transition-colors relative cursor-pointer group">
                                 <template x-if="!kycData.retro">
                                     <div>
                                         <i class="ph-fill ph-camera text-3xl text-gray-500 mb-2 group-hover:text-[#0A84FF] transition-colors"></i>
@@ -285,7 +356,7 @@
                                 <template x-if="kycData.retro">
                                     <div class="flex flex-col items-center justify-center">
                                         <i class="ph-fill ph-check-circle text-3xl text-[#32D74B] mb-2"></i>
-                                        <span class="text-xs font-bold text-white mb-2">Retro Acquisito</span>
+                                        <span class="text-xs font-bold text-white mb-2">Retro Caricato in Memoria</span>
                                         <button @click="kycData.retro = ''" class="text-[#FF453A] bg-[#FF453A]/10 px-3 py-1 rounded-full text-xs font-bold z-10 relative">Rimuovi</button>
                                     </div>
                                 </template>
@@ -293,8 +364,8 @@
                         </div>
 
                         <div class="mt-6 flex justify-end">
-                            <button @click="submitKYCDocuments" :disabled="!kycData.fronte || !kycData.retro" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#0A84FF] hover:bg-[#007AFF] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all disabled:opacity-40 glow-button">
-                                <i class="ph-bold ph-paper-plane-right text-base"></i> Trasmetti Documenti KYC
+                            <button @click="submitKYCDocuments" :disabled="!kycData.fronte || !kycData.retro" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#0A84FF] hover:bg-[#007AFF] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed glow-button">
+                                <i class="ph-bold ph-paper-plane-right text-base"></i> Trasmetti Documenti di Verifica
                             </button>
                         </div>
                     </div>
@@ -313,8 +384,9 @@
                     <div class="absolute inset-0 bg-gradient-to-b from-[#0A84FF]/10 to-transparent"></div>
                     <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2 relative z-10">Token OTP Dinamico di Rete</span>
                     <p class="text-4xl font-black tracking-[0.25em] font-mono-tech text-white mb-6 relative z-10" x-text="otpPin || '000-000'"></p>
+                    
                     <div class="w-full flex items-center gap-3 relative z-10">
-                        <span class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Aggiornamento</span>
+                        <span class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Rigenerazione</span>
                         <div class="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
                             <div class="h-full bg-[#0A84FF] rounded-full transition-all duration-1000 ease-linear" id="otpLinearProgress" style="width: 100%"></div>
                         </div>
@@ -328,99 +400,39 @@
                             <i class="ph-fill ph-broadcast text-[#0A84FF] text-lg mt-0.5 animate-pulse shrink-0"></i>
                             <div>
                                 <span class="font-bold text-white text-xs block mb-0.5">ERP & CRM Gestionale (GLS)</span>
-                                <span class="text-[11px] text-gray-400 leading-snug block">Sincronizzazione attiva su nodi dedicati.</span>
+                                <span class="text-[11px] text-gray-400 leading-snug block">Canale bidirezionale attivo.</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- NAVIGATION SHORTCUTS -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <!-- SHORTCUTS -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 <button @click="switchTab('services')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-[#0A84FF]/50 transition-all text-left flex flex-col justify-between h-32 group">
                     <div class="w-10 h-10 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] text-xl"><i class="ph-fill ph-squares-four"></i></div>
-                    <div><h4 class="text-xs font-extrabold text-white">Catalogo ERP</h4><p class="text-[10px] text-gray-400 mt-0.5">Richiedi servizi</p></div>
+                    <div><h4 class="text-xs font-extrabold text-white">Catalogo ERP</h4><p class="text-[10px] text-gray-400 mt-0.5">Attiva nuovi moduli</p></div>
                 </button>
                 
-                <button @click="switchTab('aura-plus')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-pink-500/50 transition-all text-left flex flex-col justify-between h-32 group">
-                    <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 text-xl"><i class="ph-fill ph-sparkle"></i></div>
-                    <div><h4 class="text-xs font-extrabold text-white">Aura Plus</h4><p class="text-[10px] text-gray-400 mt-0.5">Abbonamento €3.99</p></div>
-                </button>
-
                 <button @click="switchTab('orders')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-yellow-500/50 transition-all text-left flex flex-col justify-between h-32 group">
                     <div class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 text-xl"><i class="ph-fill ph-clipboard-text"></i></div>
-                    <div><h4 class="text-xs font-extrabold text-white">I Miei Ordini</h4><p class="text-[10px] text-gray-400 mt-0.5">Stato pratiche</p></div>
+                    <div><h4 class="text-xs font-extrabold text-white">I Miei Ordini</h4><p class="text-[10px] text-gray-400 mt-0.5">Stato pratiche attive</p></div>
                 </button>
 
                 <button @click="switchTab('wallet')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-[#32D74B]/50 transition-all text-left flex flex-col justify-between h-32 group">
                     <div class="w-10 h-10 rounded-xl bg-[#32D74B]/10 flex items-center justify-center text-[#32D74B] text-xl"><i class="ph-fill ph-wallet"></i></div>
-                    <div><h4 class="text-xs font-extrabold text-white">Conto & Saldo</h4><p class="text-[10px] text-gray-400 mt-0.5">Gestisci AuraCredit</p></div>
+                    <div><h4 class="text-xs font-extrabold text-white">Conto & Fatture</h4><p class="text-[10px] text-gray-400 mt-0.5">Gestisci AuraCredit</p></div>
                 </button>
 
                 <button @click="switchTab('id-card')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-purple-500/50 transition-all text-left flex flex-col justify-between h-32 group">
                     <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 text-xl"><i class="ph-fill ph-identification-card"></i></div>
-                    <div><h4 class="text-xs font-extrabold text-white">Digital Pass</h4><p class="text-[10px] text-gray-400 mt-0.5">Badge e QR</p></div>
+                    <div><h4 class="text-xs font-extrabold text-white">Digital Pass</h4><p class="text-[10px] text-gray-400 mt-0.5">Badge e QR Code</p></div>
                 </button>
 
-                <button @click="switchTab('chat')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-orange-500/50 transition-all text-left flex flex-col justify-between h-32 group">
+                <button @click="switchTab('chat')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-orange-500/50 transition-all text-left flex flex-col justify-between h-32 group col-span-2 sm:col-span-1">
                     <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 text-xl"><i class="ph-fill ph-headset"></i></div>
-                    <div><h4 class="text-xs font-extrabold text-white">Assistenza</h4><p class="text-[10px] text-gray-400 mt-0.5">Chat diretta</p></div>
+                    <div><h4 class="text-xs font-extrabold text-white">Assistenza</h4><p class="text-[10px] text-gray-400 mt-0.5">Chat diretta staff</p></div>
                 </button>
-            </div>
-        </div>
-
-        <!-- AURA PLUS TAB -->
-        <div x-show="appTab === 'aura-plus'" class="space-y-6" x-transition>
-            <div class="glass-panel p-8 rounded-[32px] border border-white/10 relative overflow-hidden bg-gradient-to-br from-purple-950/40 via-black to-blue-950/40">
-                <div class="max-w-xl">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 text-[10px] font-extrabold uppercase tracking-widest mb-4">
-                        <i class="ph-fill ph-sparkle"></i> Ecosistema Musicale & App Unificate
-                    </span>
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-white mb-3">Abbonamento Aura Plus Pass</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed mb-6">Sblocca l'accesso completo a tutte le app dell'ecosistema Horizon (inclusa la piattaforma RYZN Music) con un'unica chiave di licenza univoca valida fino a un massimo di <strong>4 dispositivi</strong>.</p>
-                    
-                    <div class="flex items-baseline gap-2 mb-8">
-                        <span class="text-4xl font-extrabold font-mono-tech text-white">€ 3,99</span>
-                        <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">/ mese (Addebito su AuraCredit)</span>
-                    </div>
-
-                    <!-- IF NOT SUBSCRIBED -->
-                    <template x-if="!userData.auraPlusActive">
-                        <div>
-                            <button @click="subscribeAuraPlus" class="bg-gradient-to-r from-pink-500 to-[#0A84FF] hover:opacity-90 text-white font-extrabold py-4 px-8 rounded-2xl text-xs uppercase tracking-widest glow-button transition-all flex items-center gap-2">
-                                <i class="ph-bold ph-check-circle text-base"></i> Attiva Aura Plus (Scala €3.99)
-                            </button>
-                            <p class="text-[11px] text-gray-500 mt-3">Il costo verrà scalato direttamente dal saldo del tuo conto AuraCredit.</p>
-                        </div>
-                    </template>
-
-                    <!-- IF SUBSCRIBED -->
-                    <template x-if="userData.auraPlusActive">
-                        <div class="space-y-6">
-                            <div class="bg-white/5 border border-white/10 p-5 rounded-2xl">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="text-xs font-bold text-[#32D74B] uppercase tracking-wider flex items-center gap-1.5">
-                                        <i class="ph-fill ph-check-circle"></i> Abbonamento Attivo
-                                    </span>
-                                    <span class="text-xs font-mono-tech text-gray-400">Scadenza: <span x-text="userData.auraPlusExpiry || 'In corso'"></span></span>
-                                </div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">La tua Chiave Universale (Usa questa per sbloccare RYZN e le app)</label>
-                                <div class="flex items-center gap-2 bg-black/60 p-3 rounded-xl border border-white/10">
-                                    <input type="text" readonly :value="userData.auraPlusLicense || 'Nessuna chiave generata'" class="bg-transparent text-white font-mono-tech font-bold text-sm w-full outline-none">
-                                    <button @click="copyToClipboard(userData.auraPlusLicense)" class="bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-xs font-bold text-white transition-colors">Copia</button>
-                                </div>
-                            </div>
-
-                            <div class="bg-black/40 border border-white/10 p-5 rounded-2xl">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-xs font-bold text-white uppercase tracking-wider">Dispositivi Connessi</span>
-                                    <span class="text-xs font-mono-tech font-bold text-[#0A84FF]" x-text="(userData.auraPlusDevices ? Object.keys(userData.auraPlusDevices).length : 1) + ' / 4 Dispositivi'"></span>
-                                </div>
-                                <p class="text-[11px] text-gray-400 leading-snug">La tua licenza è associata e protetta per un massimo di 4 dispositivi differenti nell'ecosistema.</p>
-                            </div>
-                        </div>
-                    </template>
-                </div>
             </div>
         </div>
 
@@ -459,17 +471,15 @@
                 <h4 class="text-sm font-extrabold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                     <i class="ph-fill ph-clipboard-text text-yellow-500 text-lg"></i> Le Tue Pratiche ERP
                 </h4>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <template x-for="ord in myOrders" :key="ord.id">
                         <div class="bg-white/[0.03] border border-white/10 rounded-[24px] p-6 flex flex-col justify-between">
                             <div>
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block" x-text="ord.categoria || 'Richiesta ERP'"></span>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block" x-text="ord.tipo || 'Privato'"></span>
                                 <h4 class="text-base font-extrabold text-white leading-tight" x-text="ord.servizio"></h4>
-                                <span class="text-[10px] text-gray-500 font-mono-tech mt-1 block">ID Pratica: <span x-text="ord.id"></span></span>
-                                <span class="text-[10px] text-gray-400 block mt-2">Sede/Indirizzo: <span x-text="ord.indirizzo || 'N/D'"></span></span>
+                                <span class="text-[10px] text-gray-500 font-mono-tech mt-1 block">ID: <span x-text="ord.id"></span></span>
                             </div>
-                            <span class="mt-4 inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wide border w-max bg-[#0A84FF]/10 text-[#0A84FF] border-[#0A84FF]/20" x-text="ord.stato || 'raccolta'"></span>
+                            <span class="mt-4 px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wide border w-max bg-[#0A84FF]/10 text-[#0A84FF] border-[#0A84FF]/20" x-text="ord.stato || 'raccolta'"></span>
                         </div>
                     </template>
                 </div>
@@ -519,28 +529,25 @@
             </div>
         </div>
 
-        <!-- SERVICES CATALOG TAB -->
+        <!-- SERVICES TAB -->
         <div x-show="appTab === 'services'" class="space-y-6" x-transition>
             <div class="glass-panel p-6 rounded-[28px] border border-white/10">
                 <div class="mb-6">
                     <h3 class="text-sm font-extrabold text-white uppercase tracking-wider mb-1">Catalogo Moduli ERP e Connettività</h3>
-                    <p class="text-xs text-gray-400">Clicca su un servizio per visualizzare la scheda descrittiva completa ed effettuare la richiesta.</p>
+                    <p class="text-xs text-gray-400">Seleziona e ordina i pacchetti per la tua azienda o abitazione.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <template x-for="serv in availableServices" :key="serv.id">
-                        <div @click="openDetailModal(serv)" class="bg-white/[0.03] border border-white/10 rounded-[24px] p-6 flex flex-col justify-between hover:border-[#0A84FF]/50 transition-all cursor-pointer group">
+                    <template x-for="serv in filteredServices" :key="serv.id">
+                        <div class="bg-white/[0.03] border border-white/10 rounded-[24px] p-6 flex flex-col justify-between">
                             <div>
-                                <div class="flex justify-between items-start mb-2">
-                                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-white/5 text-[#0A84FF] border border-[#0A84FF]/20" x-text="serv.category || 'B2B / P2B'"></span>
-                                    <i class="ph-bold ph-arrow-up-right text-gray-400 group-hover:text-[#0A84FF] transition-colors"></i>
-                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-white/5 text-[#0A84FF] border border-[#0A84FF]/20 inline-block mb-2" x-text="serv.type"></span>
                                 <h4 class="text-base font-extrabold text-white mb-1" x-text="serv.title"></h4>
-                                <p class="text-xs text-gray-400 line-clamp-2 mb-4" x-text="serv.shortDescription"></p>
+                                <p class="text-xs text-gray-400 mb-4" x-text="serv.description"></p>
                             </div>
                             <div class="pt-4 border-t border-white/10 flex items-center justify-between">
                                 <span class="text-sm font-mono-tech font-extrabold text-[#32D74B]" x-text="serv.priceText"></span>
-                                <span class="text-xs font-bold text-[#0A84FF] group-hover:underline">Vedi Scheda &rarr;</span>
+                                <button @click="openOrderModal(serv)" :disabled="userData.statoVerifica !== 'approvato'" class="px-4 py-2 rounded-xl bg-[#0A84FF] text-white font-bold text-xs disabled:opacity-30">Richiedi</button>
                             </div>
                         </div>
                     </template>
@@ -548,16 +555,16 @@
             </div>
         </div>
 
-        <!-- CHAT SUPPORT TAB -->
+        <!-- CHAT TAB -->
         <div x-show="appTab === 'chat'" class="glass-panel rounded-[28px] flex flex-col h-[600px] overflow-hidden border border-white/10" x-transition>
             <div class="px-6 py-5 border-b border-white/10 bg-white/[0.02]">
                 <h4 class="text-sm font-extrabold text-white">Assistenza Tecnica Diretta</h4>
             </div>
             <div id="chatWindow" class="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
-                <template x-for="msg in chatMessages" :key="msg.id">
+                <template x-for="msg in chatMessages" :key="msg.id || msg.timestamp">
                     <div class="flex flex-col max-w-[80%]" :class="msg.sender === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'">
                         <div class="px-4 py-3 rounded-[20px] text-xs" :class="msg.sender === 'user' ? 'bg-[#0A84FF] text-white' : 'bg-white/10 text-white'">
-                            <p x-text="msg.text"></p>
+                            <p x-text="msg.message || msg.text"></p>
                         </div>
                     </div>
                 </template>
@@ -568,100 +575,17 @@
             </form>
         </div>
 
-        <!-- MODAL POPUP DETTAGLI SERVIZIO -->
-        <div x-show="detailModal.open" class="fixed inset-0 bg-black/80 z-[8000] flex items-center justify-center p-4 backdrop-blur-xl" style="display: none;" x-transition>
-            <div class="w-full max-w-lg glass-panel p-6 sm:p-8 rounded-[32px] border border-white/15 relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                <button @click="detailModal.open = false" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
-                
-                <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20 inline-block mb-3" x-text="detailModal.service ? detailModal.service.category : ''"></span>
-                <h3 class="text-xl font-extrabold text-white mb-2" x-text="detailModal.service ? detailModal.service.title : ''"></h3>
-                <p class="text-base font-mono-tech font-bold text-[#32D74B] mb-6" x-text="detailModal.service ? detailModal.service.priceText : ''"></p>
-
-                <div class="space-y-4 mb-8 text-xs text-gray-300 leading-relaxed border-t border-b border-white/10 py-4">
-                    <p class="font-semibold text-white text-sm" x-text="detailModal.service ? detailModal.service.shortDescription : ''"></p>
-                    <p x-text="detailModal.service ? detailModal.service.fullDescription : ''"></p>
-                    
-                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Incluso nell'attivazione:</span>
-                        <template x-for="item in (detailModal.service ? detailModal.service.features : [])" :key="item">
-                            <div class="flex items-center gap-2 text-gray-200">
-                                <i class="ph-bold ph-check text-[#32D74B]"></i>
-                                <span x-text="item"></span>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <button @click="proceedToOrderForm()" :disabled="userData.statoVerifica !== 'approvato'" class="w-full bg-[#0A84FF] hover:bg-[#007AFF] text-white font-extrabold py-4 rounded-2xl text-xs uppercase tracking-wider glow-button flex items-center justify-center gap-2 disabled:opacity-40">
-                    <i class="ph-bold ph-shopping-bag text-base"></i> Richiedi / Acquista Servizio
-                </button>
-                <p class="text-[10px] text-gray-500 text-center mt-2" x-show="userData.statoVerifica !== 'approvato'">Completare la verifica KYC per abilitare la richiesta contratti.</p>
-            </div>
-        </div>
-
-        <!-- MODAL FORM D'ORDINE PRE-COMPILATO -->
-        <div x-show="orderModal.open" class="fixed inset-0 bg-black/80 z-[8500] flex items-center justify-center p-4 backdrop-blur-xl" style="display: none;" x-transition>
-            <div class="w-full max-w-xl glass-panel p-6 sm:p-8 rounded-[32px] border border-white/15 relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <!-- MODAL ORDINE -->
+        <div x-show="orderModal.open" class="fixed inset-0 bg-black/80 z-[8000] flex items-center justify-center p-4 backdrop-blur-xl" style="display: none;" x-transition>
+            <div class="w-full max-w-lg glass-panel p-6 sm:p-8 rounded-[32px] border border-white/15 relative shadow-2xl">
                 <button @click="orderModal.open = false" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
-
-                <h4 class="text-lg font-extrabold text-white mb-1">Modulo di Richiesta ERP</h4>
-                <p class="text-xs text-gray-400 mb-6">Servizio: <strong class="text-[#0A84FF]" x-text="orderForm.servizio"></strong></p>
-
-                <form @submit.prevent="submitServiceOrder" class="space-y-4 text-xs">
-                    
-                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-3">
-                        <span class="text-[10px] font-bold text-[#0A84FF] uppercase tracking-widest block flex items-center gap-1">
-                            <i class="ph-fill ph-shield-check"></i> Dati Verificati da Horizon ID
-                        </span>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nome e Cognome</label>
-                                <input type="text" :value="userData.nome" readonly class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-gray-300 font-bold outline-none cursor-not-allowed">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Codice Fiscale / P.IVA</label>
-                                <input type="text" :value="userData.piva_cf" readonly class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-gray-300 font-mono-tech font-bold outline-none cursor-not-allowed">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email</label>
-                                <input type="email" :value="userData.email" readonly class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-gray-300 font-bold outline-none cursor-not-allowed">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">SDI / PEC</label>
-                                <input type="text" :value="(userData.sdi || '-') + ' / ' + (userData.pec || '-')" readonly class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-gray-300 font-mono-tech outline-none cursor-not-allowed">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Dati Operativi e Sede</span>
-                        
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-300 uppercase mb-1">Recapito Telefonico *</label>
-                            <input type="tel" x-model="orderForm.telefono" required placeholder="+39 333 1234567" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-[#0A84FF]">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-300 uppercase mb-1">Indirizzo di Installazione / Sede Operativa *</label>
-                            <input type="text" x-model="orderForm.indirizzo" required placeholder="Via Roma 10, 20100 Milano (MI)" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-[#0A84FF]">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-300 uppercase mb-1">Note Aggiuntive per i Tecnici ERP</label>
-                            <textarea x-model="orderForm.note" rows="3" placeholder="Specificare eventuali orari preferiti o dettagli della struttura..." class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-[#0A84FF]"></textarea>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full bg-[#32D74B] text-black font-extrabold py-4 rounded-2xl text-xs uppercase tracking-wider glow-button mt-4">Invia Pratica Definitiva all'ERP</button>
-                </form>
+                <h4 class="text-lg font-extrabold text-white mb-2" x-text="orderModal.service ? orderModal.service.title : ''"></h4>
+                <p class="text-xs text-gray-400 mb-6">Conferma l'invio della pratica al gestionale ERP Horizon.</p>
+                <button @click="submitServiceOrder" class="w-full bg-[#0A84FF] text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider glow-button">Invia Pratica</button>
             </div>
         </div>
 
-        <!-- MODAL RECHARGE -->
+        <!-- MODAL RICARICA -->
         <div x-show="rechargeModal.open" class="fixed inset-0 bg-black/80 z-[8000] flex items-center justify-center p-4 backdrop-blur-xl" style="display: none;" x-transition>
             <div class="w-full max-w-md glass-panel p-6 rounded-[32px] border border-white/15 relative shadow-2xl">
                 <div class="flex justify-between items-center mb-6">
@@ -675,15 +599,11 @@
             </div>
         </div>
 
-        <!-- BOTTOM NAVIGATION BAR -->
+        <!-- BOTTOM NAV -->
         <nav class="fixed bottom-0 left-0 right-0 z-[7000] bg-[rgba(20,20,22,0.85)] backdrop-blur-2xl border-t border-white/10 pb-7 pt-3 px-4 flex items-center justify-around md:hidden">
             <button @click="switchTab('dashboard')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'dashboard' ? 'text-[#0A84FF]' : 'text-gray-500'">
                 <i class="text-2xl" :class="appTab === 'dashboard' ? 'ph-fill ph-squares-four' : 'ph ph-squares-four'"></i>
                 <span class="text-[9px] font-bold">Home</span>
-            </button>
-            <button @click="switchTab('aura-plus')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'aura-plus' ? 'text-pink-400' : 'text-gray-500'">
-                <i class="text-2xl" :class="appTab === 'aura-plus' ? 'ph-fill ph-sparkle' : 'ph ph-sparkle'"></i>
-                <span class="text-[9px] font-bold">Aura+</span>
             </button>
             <button @click="switchTab('wallet')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'wallet' ? 'text-[#32D74B]' : 'text-gray-500'">
                 <i class="text-2xl" :class="appTab === 'wallet' ? 'ph-fill ph-wallet' : 'ph ph-wallet'"></i>
@@ -693,43 +613,48 @@
                 <i class="text-2xl" :class="appTab === 'services' ? 'ph-fill ph-cube' : 'ph ph-cube'"></i>
                 <span class="text-[9px] font-bold">Moduli</span>
             </button>
+            <button @click="switchTab('orders')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'orders' ? 'text-yellow-400' : 'text-gray-500'">
+                <i class="text-2xl" :class="appTab === 'orders' ? 'ph-fill ph-clipboard-text' : 'ph ph-clipboard-text'"></i>
+                <span class="text-[9px] font-bold">Ordini</span>
+            </button>
             <button @click="switchTab('chat')" class="flex flex-col items-center gap-1 transition-colors w-14" :class="appTab === 'chat' ? 'text-orange-400' : 'text-gray-500'">
                 <i class="text-2xl" :class="appTab === 'chat' ? 'ph-fill ph-chat-circle-text' : 'ph ph-chat-circle-text'"></i>
                 <span class="text-[9px] font-bold">Supporto</span>
             </button>
         </nav>
-
     </div>
 
-    <!-- MAIN APP SCRIPT -->
+    <!-- SCRIPT PRINCIPALE -->
     <script>
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
         document.addEventListener('alpine:init', () => {
-            const fbConfigGLS = { databaseURL: "https://horizongls-default-rtdb.europe-west1.firebasedatabase.app" };
-            const fbConfigID = { databaseURL: "https://horizon-id-core-default-rtdb.europe-west1.firebasedatabase.app" };
+            const fbConfigGLS = {
+                apiKey: "AIzaSyBJjhL9-d-2QMKDYviV7KfYhUOHWDAoasU",
+                databaseURL: "https://horizongls-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "horizongls"
+            };
 
-            const appGLS = !firebase.apps.some(app => app.name === "[DEFAULT]") ? firebase.initializeApp(fbConfigGLS) : firebase.app();
-            const appID = !firebase.apps.some(app => app.name === "HorizonIDApp") ? firebase.initializeApp(fbConfigID, "HorizonIDApp") : firebase.app("HorizonIDApp");
+            const fbConfigID = {
+                apiKey: "AIzaSyD8_itwMJwjLSftJaFJ6ztQN-B6WSBORoo",
+                databaseURL: "https://horizon-id-core-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "horizon-id-core"
+            };
+
+            const appGLS = !firebase.apps.some(a => a.name === "[DEFAULT]") ? firebase.initializeApp(fbConfigGLS) : firebase.app();
+            const appID = !firebase.apps.some(a => a.name === "HorizonIDApp") ? firebase.initializeApp(fbConfigID, "HorizonIDApp") : firebase.app("HorizonIDApp");
 
             const dbGLS = firebase.database(appGLS);
             const dbID = firebase.database(appID);
             const authID = firebase.auth(appID);
 
             Alpine.data('horizonEcosystem', () => ({
-                isPwa: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || window.location.search.includes('mode=pwa'),
                 user: null,
-                userData: { statoVerifica: 'mancante', nome: '', piva_cf: '', telefono: '', email: '', sdi: '', pec: '', auraCredit: 0, auraPlusActive: false },
+                userData: { statoVerifica: 'mancante', nome: '', piva_cf: '', auraCredit: 0 },
                 authMode: 'login',
                 appTab: 'dashboard',
                 toasts: [],
                 globalLoader: { show: false, text: '' },
                 
-                authForm: { email: '', password: '', nome: '', cognome: '', cf: '', telefono: '', sdi: '', pec: '' },
+                authForm: { email: '', password: '', nome: '', cognome: '', cf: '' },
                 kycData: { fronte: '', retro: '' },
                 newMessage: '',
                 
@@ -741,67 +666,37 @@
                 otpInterval: null,
                 paypalInitialized: false,
 
-                detailModal: { open: false, service: null },
-                orderModal: { open: false },
-                orderForm: { servizio: '', categoria: '', telefono: '', indirizzo: '', note: '' },
-
+                orderModal: { open: false, service: null },
+                orderForm: { tipoCliente: 'Privato', note: '' },
                 rechargeModal: { open: false, amount: 50 },
                 
-                availableServices: [
-                    { 
-                        id: 'orion-fwa-priv', 
-                        category: 'B2C / Connettività',
-                        title: 'Orion FWA Privato', 
-                        priceText: '€ 35.00 / mese', 
-                        shortDescription: 'Connettività internet a banda ultralarga via ponti radio FWA dedicati.',
-                        fullDescription: 'Modulo di connettività residenziale ad alte prestazioni. Garantisce banda minima e latenza ridotta grazie alla tecnologia radio proprietaria Orion.',
-                        features: ['Banda fino a 300 Mbps', 'Router Wi-Fi 6 incluso', 'Assistenza prioritaria H24']
-                    },
-                    { 
-                        id: 'orion-fwa-biz', 
-                        category: 'B2B / Aziendale',
-                        title: 'Orion FWA Business', 
-                        priceText: '€ 75.00 / mese', 
-                        shortDescription: 'Connettività aziendale ad alte prestazioni con IP statico garantito.',
-                        fullDescription: 'Infrastruttura di rete dedicata alle imprese. Include indirizzo IP statico, SLA di ripristino entro 4 ore e priorità di instradamento traffico.',
-                        features: ['IP Statico IPv4/IPv6', 'Banda Simmetrica Garantita', 'SLA Intervento 4 Ore']
-                    },
-                    { 
-                        id: 'web-app-pwa', 
-                        category: 'P2B / Sviluppo Software',
-                        title: 'Sito Custom + App Mobile PWA', 
-                        priceText: '€ 78.00 / mese', 
-                        shortDescription: 'Progressive Web App installabile per la fidelizzazione dei clienti.',
-                        fullDescription: 'Creazione di piattaforma web personalizzata e applicazione PWA integrata nell’ecosistema Horizon. Inclusi aggiornamenti continui e manutenzione cloud.',
-                        features: ['PWA Installabile da Browser', 'Notifiche Push Integrate', 'Database Cloud Ridondato']
-                    },
-                    { 
-                        id: 'ai-orion-hub', 
-                        category: 'B2B / Intelligenza Artificiale',
-                        title: 'Assistenza Orion AI Hub', 
-                        priceText: '€ 45.00 / mese', 
-                        shortDescription: 'Integrazione di assistenti intelligenti basati su flussi aziendali.',
-                        fullDescription: 'Attivazione di agente virtuale AI addestrato sui documenti e processi della tua azienda, integrabile con il CRM e i canali di supporto.',
-                        features: ['Addestramento Custom', 'Integrazione Chat API', 'Dashboard Analisi Flussi']
-                    }
+                selectedCategory: 'tutti',
+                categories: [
+                    { id: 'tutti', name: 'Tutti i Moduli' },
+                    { id: 'privati', name: 'Privati' },
+                    { id: 'pmi', name: 'PMI & Web' }
                 ],
+                
+                availableServices: [
+                    { id: 'orion-fwa-priv', title: 'Orion FWA Privato', category: 'privati', type: 'Connettività', priceText: '€ 35.00 / mese', description: 'Connettività internet a banda ultralarga via ponti radio FWA.' },
+                    { id: 'web-app-pwa', title: 'Sito Custom + App Mobile PWA', category: 'pmi', type: 'Software', priceText: '€ 78.00 / mese', description: 'Progressive Web App installabile per la fidelizzazione.' }
+                ],
+
+                flowStati: ['raccolta', 'in corso', 'approvata', 'attivo'],
 
                 switchTab(tab) {
                     this.appTab = tab;
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 },
 
-                async installPwa() {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                            this.isPwa = true;
-                            deferredPrompt = null;
-                        }
-                    } else {
-                        alert("Per installare l'app, apri il menu del browser (es. ⋮) e seleziona 'Aggiungi a schermata Home' o 'Installa app'.");
-                    }
+                normalizzaStato(stato) {
+                    if(!stato) return 'raccolta';
+                    return stato.toLowerCase().trim();
+                },
+
+                get filteredServices() {
+                    if (this.selectedCategory === 'tutti') return this.availableServices;
+                    return this.availableServices.filter(s => s.category === this.selectedCategory);
                 },
 
                 init() {
@@ -821,7 +716,7 @@
                                 this.chatMessages = list;
                             });
 
-                            dbGLS.ref('richieste_servizi').orderByChild('uid').equalTo(usr.uid).on('value', (snap) => {
+                            dbGLS.ref('richieste_servizi').orderByChild('email').equalTo(usr.email).on('value', (snap) => {
                                 const ords = [];
                                 snap.forEach((child) => ords.push({ id: child.key, ...child.val() }));
                                 this.myOrders = ords.reverse();
@@ -848,13 +743,9 @@
                                 uid: cred.user.uid,
                                 nome: `${this.authForm.nome} ${this.authForm.cognome}`.trim(),
                                 email: this.authForm.email,
-                                telefono: this.authForm.telefono,
                                 piva_cf: this.authForm.cf.toUpperCase(),
-                                sdi: this.authForm.sdi.toUpperCase(),
-                                pec: this.authForm.pec,
                                 statoVerifica: 'mancante',
-                                auraCredit: 0,
-                                auraPlusActive: false
+                                auraCredit: 0
                             });
                         }
                     } catch (err) {
@@ -876,94 +767,32 @@
                             statoVerifica: 'in_attesa',
                             kyc_docs: { fronte: this.kycData.fronte, retro: this.kycData.retro }
                         });
-                        this.showToast("Documentazione trasmessa con successo!");
+                        this.showToast("Documenti trasmessi correttamente.");
                     } catch (err) {
                         this.showToast("Errore di trasmissione", 'error');
                     }
                 },
 
-                openDetailModal(service) {
-                    this.detailModal.service = service;
-                    this.detailModal.open = true;
-                },
-
-                proceedToOrderForm() {
-                    this.orderForm.servizio = this.detailModal.service.title;
-                    this.orderForm.categoria = this.detailModal.service.category;
-                    this.orderForm.telefono = this.userData.telefono || '';
-                    this.orderForm.indirizzo = '';
-                    this.orderForm.note = '';
-                    
-                    this.detailModal.open = false;
+                openOrderModal(service) {
+                    this.orderModal.service = service;
                     this.orderModal.open = true;
                 },
 
                 async submitServiceOrder() {
                     try {
                         await dbGLS.ref('richieste_servizi').push({
-                            id_utente: this.user.uid,
+                            servizioAcquistato: this.orderModal.service.title,
+                            email: this.user.email,
                             uid: this.user.uid,
-                            servizio: this.orderForm.servizio,
-                            categoria: this.orderForm.categoria,
-                            nome: this.userData.nome,
-                            email: this.userData.email,
-                            codice_fiscale: this.userData.piva_cf,
-                            piva_cf: this.userData.piva_cf,
-                            sdi: this.userData.sdi || '',
-                            pec: this.userData.pec || '',
-                            telefono: this.orderForm.telefono,
-                            indirizzo: this.orderForm.indirizzo,
-                            note: this.orderForm.note,
-                            stato: 'raccolta',
-                            dataInvio: new Date().toISOString()
+                            nomeCliente: this.userData.nome,
+                            cf_piva: this.userData.piva_cf,
+                            dataInvio: new Date().toISOString(),
+                            stato: 'raccolta'
                         });
-                        this.showToast("Pratica inoltrata al gestionale ERP con successo!");
+                        this.showToast("Pratica inoltrata con successo.");
                         this.orderModal.open = false;
-                        this.switchTab('orders');
                     } catch(e) {
-                        this.showToast("Errore durante l'invio della richiesta", 'error');
-                    }
-                },
-
-                async subscribeAuraPlus() {
-                    const price = 3.99;
-                    const currentCredit = parseFloat(this.userData.auraCredit || 0);
-
-                    if (currentCredit < price) {
-                        this.showToast("Saldo AuraCredit insufficiente (€3,99 richiesti). Ricarica il conto.", 'error');
-                        return;
-                    }
-
-                    try {
-                        const newCredit = currentCredit - price;
-                        const licenseKey = 'AURA-PLUS-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-                        const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-                        await dbID.ref(`users/${this.user.uid}`).update({
-                            auraCredit: newCredit,
-                            auraPlusActive: true,
-                            auraPlusLicense: licenseKey,
-                            auraPlusExpiry: expiryDate
-                        });
-
-                        await dbGLS.ref(`transazioni/${this.user.uid}`).push({
-                            timestamp: Date.now(),
-                            importo: -price,
-                            tipo: 'Sottoscrizione Abbonamento Aura Plus',
-                            stato: 'completato'
-                        });
-
-                        await dbID.ref(`licenses/${licenseKey}`).set({
-                            uid: this.user.uid,
-                            createdAt: Date.now(),
-                            expiry: expiryDate,
-                            maxDevices: 4,
-                            devices: { [navigator.userAgent.substring(0, 30)]: true }
-                        });
-
-                        this.showToast("Abbonamento Aura Plus attivato con successo!");
-                    } catch (err) {
-                        this.showToast("Errore durante l'attivazione", 'error');
+                        this.showToast("Errore di invio", 'error');
                     }
                 },
 
@@ -978,16 +807,14 @@
                                     onApprove: async (data, actions) => {
                                         const order = await actions.order.capture();
                                         const amount = parseFloat(order.purchase_units[0].amount.value);
-                                        const newBal = (parseFloat(this.userData.auraCredit) || 0) + amount;
-                                        
-                                        await dbID.ref(`users/${this.user.uid}`).update({ auraCredit: newBal });
+                                        await dbID.ref(`users/${this.user.uid}`).update({ auraCredit: (parseFloat(this.userData.auraCredit) || 0) + amount });
                                         await dbGLS.ref(`transazioni/${this.user.uid}`).push({
                                             timestamp: Date.now(),
                                             importo: amount,
-                                            tipo: 'Ricarica Conto Esterna',
+                                            tipo: 'Ricarica Saldo',
                                             stato: 'approvato'
                                         });
-                                        this.showToast("Ricarica accreditata con successo!");
+                                        this.showToast("Ricarica accreditata!");
                                         this.rechargeModal.open = false;
                                     }
                                 }).render('#paypal-button-container');
@@ -999,8 +826,9 @@
 
                 async sendChatMessage() {
                     if (!this.newMessage.trim()) return;
-                    await dbID.ref(`chats/${this.user.uid}`).push({ sender: 'user', text: this.newMessage.trim(), timestamp: Date.now() });
+                    const text = this.newMessage.trim();
                     this.newMessage = '';
+                    await dbID.ref(`chats/${this.user.uid}`).push({ sender: 'user', text, timestamp: Date.now() });
                 },
 
                 formatDate(isoString) {
@@ -1011,7 +839,7 @@
 
                 copyToClipboard(text) {
                     navigator.clipboard.writeText(text);
-                    this.showToast("Copiato negli appunti!");
+                    this.showToast("Copiato negli appunti.");
                 },
 
                 startRollingOTP() {
@@ -1034,6 +862,32 @@
                 }
             }));
         });
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registrato', reg))
+            .catch(err => console.error('Errore SW', err));
+        });
+      }
+    </script>
+    <script>
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+      });
+
+      async function installaApp() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          deferredPrompt = null;
+        } else {
+          alert("L'app è già installata oppure stai usando Safari su iOS (usa il tasto 'Condividi' > 'Aggiungi alla schermata Home').");
+        }
+      }
     </script>
 </body>
 </html>
