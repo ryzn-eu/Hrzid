@@ -61,6 +61,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         html { scroll-behavior: smooth; }
+        [x-cloak] { display: none !important; }
     </style>
     
     <!-- PWA ENFORCEMENT & INSTALL SCRIPT -->
@@ -89,7 +90,15 @@
                         window.location.search.includes('mode=pwa');
             
             if (!isPwa) {
+                var style = document.createElement('style');
+                style.id = 'pwa-lock-style';
+                style.innerHTML = 'body { display: none !important; }';
+                document.head.appendChild(style);
+                
                 window.addEventListener('DOMContentLoaded', function() {
+                    var lockStyle = document.getElementById('pwa-lock-style');
+                    if(lockStyle) lockStyle.remove();
+                    
                     var lockDiv = document.createElement('div');
                     lockDiv.id = 'pwa-lock-screen';
                     lockDiv.className = 'fixed inset-0 z-[10000] bg-black flex items-center justify-center p-4 select-none overflow-y-auto';
@@ -741,13 +750,12 @@
             const fbConfigGLS = { databaseURL: "https://horizongls-default-rtdb.europe-west1.firebasedatabase.app" };
             const fbConfigID = { databaseURL: "https://horizon-id-core-default-rtdb.europe-west1.firebasedatabase.app" };
 
-            // Inizializzazione sicura con controllo delle istanze Firebase esistenti
             const appGLS = !firebase.apps.some(app => app.name === "[DEFAULT]") ? firebase.initializeApp(fbConfigGLS) : firebase.app();
             const appID = !firebase.apps.some(app => app.name === "HorizonIDApp") ? firebase.initializeApp(fbConfigID, "HorizonIDApp") : firebase.app("HorizonIDApp");
 
             const dbGLS = firebase.database(appGLS);
             const dbID = firebase.database(appID);
-            const authID = authID = appID.auth();
+            const authID = firebase.auth(appID);
 
             Alpine.data('horizonEcosystem', () => ({
                 user: null,
@@ -1045,7 +1053,7 @@
                 showToast(message, type = 'success') {
                     const id = Date.now();
                     this.toasts.push({ id, message, type });
-                    setTimeout(() => this.toasts = this.toasts.filter(t => t.id != id), 3000);
+                    setTimeout(() => this.toasts = this.toasts.filter(t => t.id !== id), 3000);
                 }
             }));
         });
