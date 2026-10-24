@@ -66,34 +66,8 @@
 </head>
 <body x-data="horizonEcosystem()" class="min-h-screen pb-28 md:pb-10">
 
-    <!-- PWA ENFORCEMENT OVERLAY (Se non in PWA) -->
-    <div x-show="!isPwaMode" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 select-none overflow-y-auto" style="background: radial-gradient(circle at 50% 30%, #1c1c1e 0%, #000000 100%);" x-cloak>
-        <div class="w-full max-w-md glass-panel p-6 sm:p-8 rounded-[32px] shadow-2xl text-center border border-white/10 my-8">
-            <div class="inline-flex p-4 bg-[#0A84FF]/10 rounded-2xl border border-[#0A84FF]/20 mb-4 animate-pulse">
-                <i class="ph-fill ph-cell-tower text-4xl text-[#0A84FF]"></i>
-            </div>
-            <h1 class="text-2xl font-extrabold tracking-tight text-white mb-2">Installazione Obbligatoria</h1>
-            <p class="text-sm text-gray-400 mb-6 leading-relaxed">Per garantire la sicurezza, la sincronizzazione dei dati e il funzionamento dell'ERP con i database Horizon, l'app <strong>Horizon ID</strong> deve essere avviata come applicazione installata.</p>
-            
-            <div class="mb-6 inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-[#0A84FF] animate-pulse"></span>
-                <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">Ambiente Protetto</span>
-            </div>
-
-            <div class="text-left space-y-4">
-                <button @click="installPwaApp" class="w-full bg-[#0A84FF] text-white font-bold py-4 rounded-[16px] glow-button flex items-center justify-center gap-2 text-sm tracking-wide mb-2">
-                    <i class="ph-bold ph-download-simple text-lg"></i>
-                    Installa Horizon ID ora
-                </button>
-                <button @click="isPwaMode = true" class="w-full bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-[16px] text-xs transition-colors">
-                    Prosegua comunque da browser (Debug)
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- GLOBAL LOADER -->
-    <div x-show="globalLoader.show" class="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-center backdrop-blur-xl" x-cloak>
+    <div x-show="globalLoader.show" class="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-center backdrop-blur-xl" x-transition>
         <div class="relative w-14 h-14 mb-4">
             <div class="absolute inset-0 border-[3px] border-white/10 rounded-full"></div>
             <div class="absolute inset-0 border-[3px] border-t-[#0A84FF] border-r-[#0A84FF]/30 rounded-full animate-spin"></div>
@@ -114,7 +88,7 @@
     </div>
 
     <!-- AUTH SECTION -->
-    <div x-show="isPwaMode && !user" class="min-h-screen flex items-center justify-center p-4 relative" style="background: radial-gradient(circle at 50% 0%, #1c1c1e 0%, #000000 100%);" x-cloak>
+    <div x-show="!user" class="min-h-screen flex items-center justify-center p-4 relative" style="background: radial-gradient(circle at 50% 0%, #1c1c1e 0%, #000000 100%);" x-cloak>
         <div class="w-full max-w-md glass-panel p-8 rounded-[32px] shadow-2xl border border-white/10">
             <div class="text-center mb-8">
                 <div class="inline-flex p-3.5 bg-[#0A84FF]/10 rounded-2xl border border-[#0A84FF]/20 mb-4 shadow-inner">
@@ -189,7 +163,7 @@
     </div>
 
     <!-- MAIN DASHBOARD -->
-    <div x-show="isPwaMode && user" class="max-w-5xl mx-auto px-4 pt-6 md:pt-10" x-cloak>
+    <div x-show="user" class="max-w-5xl mx-auto px-4 pt-6 md:pt-10" x-cloak>
         
         <header class="glass-panel p-5 rounded-[28px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border border-white/10">
             <div class="flex items-center gap-4">
@@ -703,12 +677,6 @@
 
     <!-- MAIN APP SCRIPT -->
     <script>
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
         document.addEventListener('alpine:init', () => {
             const fbConfigGLS = { databaseURL: "https://horizongls-default-rtdb.europe-west1.firebasedatabase.app" };
             const fbConfigID = { databaseURL: "https://horizon-id-core-default-rtdb.europe-west1.firebasedatabase.app" };
@@ -721,7 +689,6 @@
             const authID = firebase.auth(appID);
 
             Alpine.data('horizonEcosystem', () => ({
-                isPwaMode: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || window.location.search.includes('mode=pwa'),
                 user: null,
                 userData: { statoVerifica: 'mancante', nome: '', piva_cf: '', telefono: '', email: '', sdi: '', pec: '', auraCredit: 0, auraPlusActive: false },
                 authMode: 'login',
@@ -789,19 +756,6 @@
                 switchTab(tab) {
                     this.appTab = tab;
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                },
-
-                async installPwaApp() {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                            this.isPwaMode = true;
-                            deferredPrompt = null;
-                        }
-                    } else {
-                        alert("Per installare l'app, apri il menu del browser e seleziona 'Aggiungi a schermata Home' o 'Installa app'.");
-                    }
                 },
 
                 init() {
