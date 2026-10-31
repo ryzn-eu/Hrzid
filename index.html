@@ -458,7 +458,7 @@
                     <div class="w-full md:w-auto shrink-0 space-y-3">
                         <template x-if="!auraPlusSubscription || auraPlusSubscription.status !== 'ATTIVO'">
                             <button @click="subscribeAuraPlus()" class="w-full md:w-auto bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-yellow-400 hover:to-amber-500 text-black font-black px-6 py-4 rounded-2xl text-xs uppercase tracking-wider glow-aura flex items-center justify-center gap-2">
-                                <i class="ph-bold ph-sparkle text-lg"></i> Attiva Aura+ (€ 19.90/mese)
+                                <i class="ph-bold ph-sparkle text-lg"></i> Attiva Aura+ (€ 3.99/mese)
                             </button>
                         </template>
                         <template x-if="auraPlusSubscription && auraPlusSubscription.status === 'ATTIVO'">
@@ -535,7 +535,7 @@
 
                 <button @click="switchTab('chat')" class="glass-panel p-5 rounded-[24px] border border-white/10 hover:border-orange-500/50 transition-all text-left flex flex-col justify-between h-32 group col-span-2 sm:col-span-1">
                     <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 text-xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-headset"></i></div>
-                    <div><h4 class="text-xs font-extrabold text-white">Supporto Live</h4><p class="text-[10px] text-gray-400 mt-0.5">Chat diretta staff</p>
+                    <div><h4 class="text-xs font-extrabold text-white">Supporto Live</h4><p class="text-[10px] text-gray-400 mt-0.5">Chat diretta staff</p></div>
                 </button>
             </div>
         </div>
@@ -1092,7 +1092,7 @@
                 // CATALOGO COMPLETO UNIFICATO DEGLI SITI DELL'ECOSISTEMA
                 availableServices: [
                     // AURA+ PREMIUM
-                    { id: 'aura-plus-sub', title: 'Abbonamento Aura+ Premium', category: 'aura_plus', type: 'Licenza Ecosistema', priceText: '€ 19.90 / mese', setupText: 'Licenza Univoca Generata', reqFields: [], bgColor: 'bg-amber-500/10 text-amber-400', icon: 'ph-crown', badge: 'Aura+ Unique Key', badgeColor: 'bg-amber-500 text-black', description: 'Attiva la licenza univoca Aura+ per sbloccare i modelli avanzati di Orion.AI Advance, sconti sulle utilities iORE e supporto VIP prioritario.' },
+                    { id: 'aura-plus-sub', title: 'Abbonamento Aura+ Premium', category: 'aura_plus', type: 'Licenza Ecosistema', priceText: '€ 3.99 / mese', setupText: 'Licenza Univoca Generata', reqFields: [], bgColor: 'bg-amber-500/10 text-amber-400', icon: 'ph-crown', badge: 'Aura+ Unique Key', badgeColor: 'bg-amber-500 text-black', description: 'Attiva la licenza univoca Aura+ per sbloccare i modelli avanzati di Orion.AI Advance, sconti sulle utilities iORE e supporto VIP prioritario.' },
                     
                     // iORE ENERGY & UTILITIES
                     { id: 'iore-luce-gas', title: 'iORE Green Luce & Gas', category: 'iore_energy', type: 'Utilities Energia', priceText: 'Tariffa Flat Personalizzata', setupText: 'Zero Costi di Attivazione', reqFields: ['pod', 'indirizzo'], bgColor: 'bg-emerald-500/10 text-emerald-400', icon: 'ph-lightning', badge: 'Green 100%', badgeColor: 'bg-emerald-600', description: 'Fornitura elettrica e gas naturale direttamente dalle centrali idroelettriche e giacimenti del Mar Nero.' },
@@ -1292,9 +1292,9 @@
                     }
                 },
 
-                // GESTIONE ABBONAMENTO AURA+ E LICENZA UNIVOCA
+                // GESTIONE ABBONAMENTO AURA+ E LICENZA UNIVOCA (CON STRUMENTO PYTHON EQUIVALENTE)
                 async subscribeAuraPlus() {
-                    const cost = 19.90;
+                    const cost = 3.99;
                     const currentCredit = parseFloat(this.userData.auraCredit || 0);
 
                     if(currentCredit < cost) {
@@ -1309,8 +1309,15 @@
                     try {
                         const newCredit = currentCredit - cost;
                         
-                        // 1. Genera chiave di licenza univoca
-                        const rawKey = 'AURA-PLUS-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                        // 1. Genera chiave di licenza univoca tramite la logica dello script Python allegato (aura_keygen.py)
+                        // AURA-<multiplo di 3>-<multiplo di 8>-<4|16|36|64>
+                        const randA = Math.floor(Math.random() * (333333 - 34 + 1)) + 34;
+                        const a = 3 * randA;
+                        const randB = Math.floor(Math.random() * (125000 - 13 + 1)) + 13;
+                        const b = 8 * randB;
+                        const choicesC = [4, 16, 36, 64];
+                        const c = choicesC[Math.floor(Math.random() * choicesC.length)];
+                        const rawKey = `AURA-${a}-${b}-${c}`;
                         
                         const licensePayload = {
                             licenseKey: rawKey,
