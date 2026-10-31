@@ -451,7 +451,7 @@
                         </div>
                         <h3 class="text-xl font-extrabold text-white">Sblocca Tutti i Servizi Premium & Orion.AI Advance</h3>
                         <p class="text-xs text-gray-400 max-w-xl leading-relaxed">
-                            Con l'abbonamento Aura+, generi una chiave di licenza univoca registrata su Firebase che attiva le funzionalità avanzate illimitate su Orion.AI, sconti su iORE, connettività Orion FWA e supporto prioritario.
+                            Con l'abbonamento Aura+, generi istantaneamente una chiave di licenza univoca basata sul motore v2 che attiva le funzionalità avanzate su Orion.AI.
                         </p>
                     </div>
 
@@ -463,7 +463,7 @@
                         </template>
                         <template x-if="auraPlusSubscription && auraPlusSubscription.status === 'ATTIVO'">
                             <div class="bg-black/60 border border-amber-500/40 p-4 rounded-2xl space-y-2">
-                                <span class="text-[9px] uppercase font-bold text-amber-400 tracking-widest block">Licenza Univoca Generata</span>
+                                <span class="text-[9px] uppercase font-bold text-amber-400 tracking-widest block">Licenza Univoca Generata (v2)</span>
                                 <div class="flex items-center gap-3">
                                     <code class="text-sm font-mono-tech font-bold text-white tracking-wider" x-text="auraPlusSubscription.licenseKey"></code>
                                     <button @click="copyToClipboard(auraPlusSubscription.licenseKey)" class="text-amber-400 hover:text-white"><i class="ph-bold ph-copy"></i></button>
@@ -590,7 +590,7 @@
                                   x-text="userData.statoVerifica === 'approvato' ? 'GRANTED' : 'RESTRICTED'"></span>
                         </div>
                         <div class="text-right">
-                            <span class="block text-[8px] uppercase font-bold text-gray-500 tracking-wider mb-0.5">Licenza Aura+</span>
+                            <span class="block text-[8px] uppercase font-bold text-gray-500 tracking-wider mb-0.5">Licenza Aura+ (v2)</span>
                             <span class="text-xs font-bold" :class="auraPlusSubscription && auraPlusSubscription.status === 'ATTIVO' ? 'text-amber-400' : 'text-gray-500'" x-text="auraPlusSubscription && auraPlusSubscription.status === 'ATTIVO' ? 'ATTIVA' : 'ASSENTE'"></span>
                         </div>
                     </div>
@@ -1091,8 +1091,8 @@
                 
                 // CATALOGO COMPLETO UNIFICATO DEGLI SITI DELL'ECOSISTEMA
                 availableServices: [
-                    // AURA+ PREMIUM
-                    { id: 'aura-plus-sub', title: 'Abbonamento Aura+ Premium', category: 'aura_plus', type: 'Licenza Ecosistema', priceText: '€ 3.99 / mese', setupText: 'Licenza Univoca Generata', reqFields: [], bgColor: 'bg-amber-500/10 text-amber-400', icon: 'ph-crown', badge: 'Aura+ Unique Key', badgeColor: 'bg-amber-500 text-black', description: 'Attiva la licenza univoca Aura+ per sbloccare i modelli avanzati di Orion.AI Advance, sconti sulle utilities iORE e supporto VIP prioritario.' },
+                    // AURA+ PREMIUM (ATTIVAZIONE ISTANTANEA v2 - ESCLUSA DA ERP)
+                    { id: 'aura-plus-sub', title: 'Abbonamento Aura+ Premium', category: 'aura_plus', type: 'Licenza Ecosistema', priceText: '€ 3.99 / mese', setupText: 'Attivazione Istantanea v2', reqFields: [], bgColor: 'bg-amber-500/10 text-amber-400', icon: 'ph-crown', badge: 'Aura+ Unique Key', badgeColor: 'bg-amber-500 text-black', description: 'Attiva istantaneamente la licenza univoca Aura+ v2 basata su algoritmo offline per sbloccare i modelli avanzati di Orion.AI Advance.' },
                     
                     // iORE ENERGY & UTILITIES
                     { id: 'iore-luce-gas', title: 'iORE Green Luce & Gas', category: 'iore_energy', type: 'Utilities Energia', priceText: 'Tariffa Flat Personalizzata', setupText: 'Zero Costi di Attivazione', reqFields: ['pod', 'indirizzo'], bgColor: 'bg-emerald-500/10 text-emerald-400', icon: 'ph-lightning', badge: 'Green 100%', badgeColor: 'bg-emerald-600', description: 'Fornitura elettrica e gas naturale direttamente dalle centrali idroelettriche e giacimenti del Mar Nero.' },
@@ -1138,19 +1138,23 @@
                 },
 
                 init() {
-                    this.showLoader("Inizializzazione Horizon ID Core...");
+                    this.showLoader("Inizializzazione Horizon ID Core (v2)...");
                     
                     authID.onAuthStateChanged(async (usr) => {
                         try {
                             this.user = usr;
                             if (usr) {
-                                // Ascolta dati profilo utente su horizon-id-core
+                                // Ascolta dati profilo utente su horizon-id-core (LEGGENDO ESCLUSIVAMENTE DAL NUOVO NODO v2)
                                 dbID.ref(`users/${usr.uid}`).on('value', (snap) => {
                                     if (snap.exists()) {
                                         this.userData = snap.val();
                                         if(this.userData.auraCredit === undefined) this.userData.auraCredit = 0;
-                                        if(this.userData.auraPlusLicense) {
-                                            this.auraPlusSubscription = this.userData.auraPlusLicense;
+                                        
+                                        // LEGGE SOLO IL NUOVO PERCORSO v2 (I VECCHI TOKEN VENGONO IGNORATI E ABBANDONATI)
+                                        if(this.userData.auraPlusLicense_v2) {
+                                            this.auraPlusSubscription = this.userData.auraPlusLicense_v2;
+                                        } else {
+                                            this.auraPlusSubscription = null; // Forza a zero se non ha la v2
                                         }
                                     }
                                 });
@@ -1170,19 +1174,22 @@
                                     const ords = [];
                                     snap.forEach((child) => {
                                         const val = child.val();
-                                        ords.push({
-                                            id: child.key,
-                                            servizio: val.servizioAcquistato || val.servizio || 'Servizio Generico',
-                                            tipoCliente: val.tipo || val.tipoCliente || 'Privato',
-                                            stato: val.stato || 'raccolta',
-                                            data: val.dataInvio ? new Date(val.dataInvio).toLocaleDateString('it-IT') : new Date().toLocaleDateString('it-IT'),
-                                            ...val
-                                        });
+                                        // Filtra via eventuali vecchi ordini Aura+ che passavano dall'ERP
+                                        if(val.servizioAcquistato !== 'Abbonamento Aura+ Premium' && val.servizio !== 'Abbonamento Aura+ Premium') {
+                                            ords.push({
+                                                id: child.key,
+                                                servizio: val.servizioAcquistato || val.servizio || 'Servizio Generico',
+                                                tipoCliente: val.tipo || val.tipoCliente || 'Privato',
+                                                stato: val.stato || 'raccolta',
+                                                data: val.dataInvio ? new Date(val.dataInvio).toLocaleDateString('it-IT') : new Date().toLocaleDateString('it-IT'),
+                                                ...val
+                                            });
+                                        }
                                     });
                                     this.myOrders = ords.reverse();
                                 });
 
-                                // Ascolta Transazioni Saldo su horizongls ed horizon-id-core
+                                // Ascolta Transazioni Saldo
                                 dbGLS.ref(`transazioni/${usr.uid}`).on('value', (snap) => {
                                     const txs = [];
                                     snap.forEach((child) => {
@@ -1198,6 +1205,7 @@
                                 this.chatMessages = [];
                                 this.myOrders = [];
                                 this.myTransactions = [];
+                                this.auraPlusSubscription = null;
                             }
                         } catch (e) {
                             console.error("Errore init:", e);
@@ -1292,7 +1300,7 @@
                     }
                 },
 
-                // GESTIONE ABBONAMENTO AURA+ E LICENZA UNIVOCA (CON STRUMENTO PYTHON EQUIVALENTE)
+                // ATTIVAZIONE ISTANTANEA AURA+ v2 (CON SCRIPT PYTHON INTEGRATO, SENZA PASSARE PER L'ERP)
                 async subscribeAuraPlus() {
                     const cost = 3.99;
                     const currentCredit = parseFloat(this.userData.auraCredit || 0);
@@ -1303,13 +1311,13 @@
                         return;
                     }
 
-                    if(!confirm(`Confermi la sottoscrizione dell'Abbonamento Aura+ a € ${cost.toFixed(2)}/mese scalati dal tuo saldo AuraCredit?`)) return;
+                    if(!confirm(`Confermi l'attivazione istantanea di Aura+ a € ${cost.toFixed(2)} scalati dal saldo AuraCredit?`)) return;
 
-                    this.showLoader("Generazione Licenza Univoca Aura+...");
+                    this.showLoader("Generazione chiave crittografica v2...");
                     try {
                         const newCredit = currentCredit - cost;
                         
-                        // 1. Genera chiave di licenza univoca tramite la logica dello script Python allegato (aura_keygen.py)
+                        // Generazione chiave esatta basata su aura_keygen.py:
                         // AURA-<multiplo di 3>-<multiplo di 8>-<4|16|36|64>
                         const randA = Math.floor(Math.random() * (333333 - 34 + 1)) + 34;
                         const a = 3 * randA;
@@ -1322,45 +1330,52 @@
                         const licensePayload = {
                             licenseKey: rawKey,
                             status: 'ATTIVO',
-                            type: 'Aura+ Premium License',
+                            type: 'Aura+ v2 Instant License',
                             createdAt: new Date().toISOString(),
                             expiresAt: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
                             uid: this.user.uid,
                             userEmail: this.user.email
                         };
 
-                        // 2. Aggiorna saldo utente e registra licenza su horizon-id-core
+                        // Salva nel NUOVO NODO ISOLATO v2 (abbandonando i vecchi token)
                         await dbID.ref(`users/${this.user.uid}`).update({
                             auraCredit: newCredit,
-                            auraPlusLicense: licensePayload
+                            auraPlusLicense_v2: licensePayload
                         });
 
-                        await dbID.ref(`licenses/${rawKey}`).set(licensePayload);
+                        // Registra nel nuovo archivio globale v2
+                        await dbID.ref(`licenses_v2/${rawKey}`).set(licensePayload);
 
-                        // 3. Registra transazione
+                        // Registra transazione contabile
                         const txId = Date.now().toString();
                         await dbGLS.ref(`transazioni/${this.user.uid}/${txId}`).set({
                             uid: this.user.uid,
                             nome: this.userData.nome || this.userData.ragioneSociale || 'Utente ID',
                             cf: this.userData.piva_cf || '',
-                            tipo: 'Abbonamento Aura+ & Licenza Univoca',
-                            servizio: 'Aura+ Premium Package',
+                            tipo: 'Attivazione Istantanea Aura+ v2',
+                            servizio: 'Aura+ Premium Package v2',
                             importo: -cost,
                             data: new Date().toLocaleDateString('it-IT'),
                             timestamp: Date.now(),
                             stato: 'Pagato'
                         });
 
-                        this.showToast("Abbonamento Aura+ attivato! Chiave licenza generata.");
+                        this.showToast("Aura+ attivato istantaneamente con chiave v2!");
                     } catch(e) {
-                        this.showToast("Errore durante la sottoscrizione: " + e.message, 'error');
+                        this.showToast("Errore durante l'attivazione: " + e.message, 'error');
                     } finally {
                         this.hideLoader();
                     }
                 },
 
-                // RICHIESTA E RICEZIONE SERVIZI COMPATIBILE CON ERP
+                // GESTIONE DEGLI ALTRI SERVIZI NORMALI DELL'HUB (QUESTI PASSANO DALL'ERP COME RICHIESTA)
                 openOrderModal(service) {
+                    // Se cliccano su Aura+ nel catalogo servizi generali, reindirizza all'attivazione rapida
+                    if(service.id === 'aura-plus-sub') {
+                        this.subscribeAuraPlus();
+                        return;
+                    }
+
                     this.orderModal.service = service;
                     this.orderForm.note = '';
                     this.orderForm.podLuce = '';
@@ -1412,11 +1427,8 @@
                             if (this.orderModal.service.reqFields.includes('dominio')) payload.dominio = this.orderForm.dominio;
                         }
 
-                        // 1. Scrittura su horizongls (ERP Centrale)
                         await dbGLS.ref(`richieste_servizi/${orderId}`).set(payload);
                         await dbGLS.ref(`ordini/${orderId}`).set(payload);
-
-                        // 2. Scrittura sincrona su horizon-id-core (User App)
                         await dbID.ref(`users/${this.user.uid}/ordini/${orderId}`).set(payload);
                         await dbID.ref(`users/${this.user.uid}/servizi/${orderId}`).set(payload);
 
